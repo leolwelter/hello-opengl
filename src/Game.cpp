@@ -62,7 +62,7 @@ Game::Game() {
             "\n"
             "void main()\n"
             "{\n"
-            "    FragColor = vec4(0.2f, 0.2f, 1.0f, 1.0f);\n"
+            "    FragColor = vec4(0.4f, 0.4f, 1.0f, 1.0f);\n"
             "} ";
     unsigned int fragmentShader;
     fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -96,7 +96,7 @@ Game::Game() {
             "\n"
             "void main()\n"
             "{\n"
-            "    FragColor = vec4(1.0f, 0.2f, 0.2f, 1.0f);\n"
+            "    FragColor = vec4(1.0f, 0.4f, 0.4f, 1.0f);\n"
             "} ";
     fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
@@ -122,11 +122,43 @@ Game::Game() {
     }
 
 
+    // BULLET shader
+    fragmentShaderSource = "\n"
+            "#version 330 core\n"
+            "out vec4 FragColor;\n"
+            "\n"
+            "void main()\n"
+            "{\n"
+            "    FragColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);\n"
+            "} ";
+    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+    glCompileShader(fragmentShader);
+    //check for compilation errors
+    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &compSucces);
+    if (!compSucces) {
+        glGetShaderInfoLog(fragmentShader, 512, NULL, log);
+        std::cout << "ERROR COMPILING FRAGMENT SHADER\n" << log << std::endl;
+    }
+
+    // link ENEMY shader
+    bulletShader = glCreateProgram();
+    glAttachShader(bulletShader, vertexShader);
+    glAttachShader(bulletShader, fragmentShader);
+    glLinkProgram(bulletShader);
+
+    //check for linking errors
+    glGetProgramiv(bulletShader, GL_LINK_STATUS, &compSucces);
+    if (!compSucces) {
+        glGetProgramInfoLog(bulletShader, 512, NULL, log);
+        std::cout << "ERROR LINKING SHADER PROGRAM\n" << log << std::endl;
+    }
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
-
+    glDeleteShader(bulletShader);
 
     /* ---- game objects ----*/
+
     Vertex enemyModel [] = {
             {0.3f, 0.0f, 0.0f},
             {0.7f, 0.0f, 0.0f},
@@ -136,32 +168,9 @@ Game::Game() {
     enemy = Creature(enemyModel);
 
 
-    // for each game object, assign some model data
     /* ---- vertex buffer data and vertex attribute config ---- */
-    //use a vertex array object to store VBO configurations
-    unsigned int VAO, VBO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    player.VBO = VBO;
-    player.VAO = VAO;
-    getModelVertices(player);
-    //specify how our vertex data is arranged
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    //enemy model vao, vbo
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    enemy.VBO = VBO;
-    enemy.VAO = VAO;
-    getModelVertices(enemy);
-    //specify how our vertex data is arranged
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
+    generateVertexObjects(&player);
+    generateVertexObjects(&enemy);
 }
 
 void Game::run() {
@@ -173,17 +182,13 @@ void Game::run() {
         if (player.direction != -1) {
             player.move(player.direction);
             // bind and reload player model
-            glBindVertexArray(player.VAO);
-            glBindBuffer(GL_ARRAY_BUFFER, player.VBO);
-            glBufferData(GL_ARRAY_BUFFER, sizeof(player.modelVerts), player.modelVerts, GL_DYNAMIC_DRAW);
+            getModelVertices(&player);
         }
 
         if (enemy.direction != -1) {
             enemy.move(enemy.direction);
             // bind and reload ENEMY model
-            glBindVertexArray(enemy.VAO);
-            glBindBuffer(GL_ARRAY_BUFFER, enemy.VBO);
-            glBufferData(GL_ARRAY_BUFFER, sizeof(enemy.modelVerts), enemy.modelVerts, GL_DYNAMIC_DRAW);
+            getModelVertices(&enemy);
         }
 
         glUseProgram(playerShader);
@@ -205,10 +210,10 @@ void Game::run() {
     glfwTerminate();
 }
 
-void Game::getModelVertices(Creature creature) {
-    glBindVertexArray(creature.VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, creature.VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(creature.modelVerts), creature.modelVerts, GL_DYNAMIC_DRAW);
+void Game::getModelVertices(GameObject* object) {
+    glBindVertexArray(object->VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, object->VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(object->modelVerts), object->modelVerts, GL_DYNAMIC_DRAW);
 
 }
 
@@ -250,7 +255,7 @@ int Game::processInput(GLFWwindow* window) {
     return -1;
 }
 
-void Game::generateVertexObjects(Creature creature) {
+void Game::generateVertexObjects(GameObject* object) {
     /* ---- vertex buffer data and vertex attribute config ---- */
     //use a vertex array object to store VBO configurations
     unsigned int VAO, VBO;
@@ -260,12 +265,17 @@ void Game::generateVertexObjects(Creature creature) {
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
-    creature.VBO = VBO;
-    creature.VAO = VAO;
-    getModelVertices(creature);
+    object->VBO = VBO;
+    object->VAO = VAO;
+
+    glBufferData(GL_ARRAY_BUFFER, sizeof(object->modelVerts), object->modelVerts, GL_DYNAMIC_DRAW);
     //specify how our vertex data is arranged
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
+
+    // unbind VAO and VBO
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void Game::framebuffer_size_callback(GLFWwindow* window, int width, int height) {

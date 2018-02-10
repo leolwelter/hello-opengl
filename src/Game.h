@@ -24,10 +24,11 @@ private:
     GLFWwindow* window;
     unsigned int playerShader;
     unsigned int enemyShader;
+    unsigned int bulletShader;
 
-    void getModelVertices(Creature creature);
+    void getModelVertices(GameObject* object);
     int processInput(GLFWwindow *window);
-    void generateVertexObjects(Creature creature);
+    void generateVertexObjects(GameObject* object);
     void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 };
 

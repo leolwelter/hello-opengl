@@ -7,18 +7,11 @@
 #include "Creature.h"
 
 Creature::Creature()
-        :hp(0), attack(0), defense(0), speed(0),
-         modelVerts{
-                 {-0.7f, -0.2f, 0.0f},
-                 {-0.3f, -0.2f, 0.0f},
-                 {-0.5f, 0.3f, 0.0f}}
+        :hp(0), attack(0), defense(0), speed(0)
 {
 }
 
-Creature::Creature(Vertex* vertexData):hp(0), attack(0), defense(0), speed(0) {
-    for (int i = 0; i < 3; i++) {
-        modelVerts[i] = vertexData[i];
-    }
+Creature::Creature(Vertex* vertexData):hp(0), attack(0), defense(0), speed(0), GameObject(vertexData) {
 }
 
 void Creature::move(float dx, float dy, float dz) {

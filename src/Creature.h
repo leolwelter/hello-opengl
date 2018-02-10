@@ -5,17 +5,14 @@
 #ifndef TEXTGAME_CREATURE_H
 #define TEXTGAME_CREATURE_H
 
-struct Vertex {
-    float x;
-    float y;
-    float z;
-};
+#include "GameObject.h"
+
 
 enum DIRECTION {
     UP, LEFT, DOWN, RIGHT
 };
 
-class Creature {
+class Creature: public GameObject {
 public:
     // constructors
     Creature();
@@ -37,11 +34,6 @@ public:
     void move(float dx, float dy, float dz);
     void move(int direction);
     int direction;
-
-    // graphic info
-    unsigned int VBO;
-    unsigned int VAO;
-    Vertex modelVerts [3]; //model vertex data
 
 
 private:
