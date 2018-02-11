@@ -8,7 +8,9 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include "Creature.h"
+#include "Bullet.h"
 #include <iostream>
+#include <vector>
 
 const unsigned int SCR_WIDTH = 1200;
 const unsigned int SCR_HEIGHT = 600;
@@ -30,6 +32,9 @@ private:
     int processInput(GLFWwindow *window);
     void generateVertexObjects(GameObject* object);
     void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+
+    // list of bullets
+    std::vector<Bullet> bullets;
 };
 
 

@@ -15,12 +15,13 @@ struct Vertex {
 class GameObject {
 public:
     GameObject();
-    GameObject(Vertex* vertexData);
+    GameObject(Vertex* vertexData, int mSize);
 
     // graphic info
     unsigned int VBO;
     unsigned int VAO;
-    Vertex modelVerts [3]; //model vertex data
+    Vertex* modelVerts; //model vertex data
+    int modelSize;
 };
 
 

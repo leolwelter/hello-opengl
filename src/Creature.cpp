@@ -6,43 +6,46 @@
 #include <cstring>
 #include "Creature.h"
 
-Creature::Creature()
-        :hp(0), attack(0), defense(0), speed(0)
+Creature::Creature() :hp(0), attack(0), defense(0), speed(0)
 {
 }
 
-Creature::Creature(Vertex* vertexData):hp(0), attack(0), defense(0), speed(0), GameObject(vertexData) {
+Creature::Creature(Vertex* vertexData):hp(0), attack(0), defense(0), speed(0), GameObject(vertexData, 3) {
 }
 
 void Creature::move(float dx, float dy, float dz) {
     // apply dx/y/z to each vertex of the model
-    for (auto &modelVert : modelVerts) {
-        modelVert.x += dx;
-        modelVert.y += dy;
-        modelVert.z += dz;
+    for (int i = 0; i < modelSize; i++) {
+        modelVerts[i].x += dx;
+        modelVerts[i].y += dy;
+        modelVerts[i].z += dz;
     }
 }
 
 void Creature::displayInfo() {
-    std::cout << "HP: " << hp << std::endl;
-    std::cout << "ATTK: " << attack << std::endl;
-    std::cout << "DEF: " << defense << std::endl;
-    std::cout << "SPD: " << speed << std::endl;
+    std::cout << "---- VERTEX DATA ----" << std::endl;
+    for (int i = 0; i < modelSize; i++) {
+        modelVerts[i] = modelVerts[i];
+        std::cout << "Vertex[" << i << "]" << std::endl;
+        std::cout << "X: " << modelVerts[i].x << std::endl;
+        std::cout << "Y: " << modelVerts[i].y << std::endl;
+        std::cout << "Z: " << modelVerts[i].z << std::endl;
+    }
 }
 
 void Creature::move(int direction) {
     switch (direction) {
         case UP:
-            move(.0f, 0.03f, .0f);
+            move(.0f, 0.02f, .0f);
             break;
         case DOWN:
-            move(.0f, -0.03f, .0f);
+            move(.0f, -0.02f, .0f);
             break;
         case LEFT:
-            move(-0.03f, .0f, .0f);
+            move(-0.02f, .0f, .0f);
             break;
         case RIGHT:
-            move(0.03f, .0f, .0f);
+            move(0.02f, .0f, .0f);
             break;
         default:
             std::cout << "STAYING STILL" << std::endl;

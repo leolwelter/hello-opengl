@@ -141,7 +141,7 @@ Game::Game() {
         std::cout << "ERROR COMPILING FRAGMENT SHADER\n" << log << std::endl;
     }
 
-    // link ENEMY shader
+    // link BULLET shader
     bulletShader = glCreateProgram();
     glAttachShader(bulletShader, vertexShader);
     glAttachShader(bulletShader, fragmentShader);
@@ -155,22 +155,42 @@ Game::Game() {
     }
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
-    glDeleteShader(bulletShader);
 
     /* ---- game objects ----*/
+    Vertex playerModel [] = {
+            {0.0f,  -0.7f, 0.0f},
+            {-0.2f, -1.0f, 0.0f},
+            {0.2f,  -1.0f, 0.0f},
+    };
 
     Vertex enemyModel [] = {
-            {0.3f, 0.0f, 0.0f},
-            {0.7f, 0.0f, 0.0f},
-            {0.5f, 0.4f, 0.0f},
+            {0.0f,  0.7f, 0.0f},
+            {-0.2f, 1.0f, 0.0f},
+            {0.2f,  1.0f, 0.0f},
     };
-    player = Creature();
+
+    Vertex bulletModel [] = {
+            {-0.02f, -0.05f, 0.0f},
+            {0.02f, 0.05f, 0.0f},
+            {-0.02f, 0.05f, 0.0f},
+
+            {0.02f, -0.05f,  0.0f},
+            {0.02f,  0.05f,  0.0f},
+            {-0.02f, -0.05f,  0.0f}
+    };
+
+    player = Creature(playerModel);
     enemy = Creature(enemyModel);
+    Bullet b1 = Bullet(bulletModel, PLAYER);
 
 
     /* ---- vertex buffer data and vertex attribute config ---- */
     generateVertexObjects(&player);
     generateVertexObjects(&enemy);
+    generateVertexObjects(&b1);
+
+    bullets.emplace_back(b1);
+
 }
 
 void Game::run() {
@@ -191,13 +211,24 @@ void Game::run() {
             getModelVertices(&enemy);
         }
 
+        // render player
         glUseProgram(playerShader);
         glBindVertexArray(player.VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawArrays(GL_TRIANGLES, 0, player.modelSize);
 
+        // render enemy
         glUseProgram(enemyShader);
         glBindVertexArray(enemy.VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawArrays(GL_TRIANGLES, 0, enemy.modelSize);
+
+        // render every bullet
+        glUseProgram(bulletShader);
+        for (auto &bullet : bullets) {
+            bullet.fly();
+            getModelVertices(&bullet);
+            glBindVertexArray(bullet.VAO);
+            glDrawArrays(GL_TRIANGLES, 0, bullet.modelSize);
+        }
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -210,11 +241,31 @@ void Game::run() {
     glfwTerminate();
 }
 
+void Game::generateVertexObjects(GameObject* object) {
+    /* ---- vertex buffer data and vertex attribute config ---- */
+    //use a vertex array object to store VBO configurations
+    unsigned int VAO, VBO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+    object->VBO = VBO;
+    object->VAO = VAO;
+    glBufferData(GL_ARRAY_BUFFER, object->modelSize * sizeof(Vertex), object->modelVerts, GL_DYNAMIC_DRAW);
+    //specify how our vertex data is arranged
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    // unbind VAO and VBO
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
 void Game::getModelVertices(GameObject* object) {
     glBindVertexArray(object->VAO);
     glBindBuffer(GL_ARRAY_BUFFER, object->VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(object->modelVerts), object->modelVerts, GL_DYNAMIC_DRAW);
-
+    glBufferData(GL_ARRAY_BUFFER, object->modelSize * sizeof(Vertex), object->modelVerts, GL_DYNAMIC_DRAW);
 }
 
 int Game::processInput(GLFWwindow* window) {
@@ -252,30 +303,12 @@ int Game::processInput(GLFWwindow* window) {
     else {
         enemy.direction = -1;
     }
+
+    if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS) {
+        player.displayInfo();
+//        enemy.displayInfo();
+    }
     return -1;
-}
-
-void Game::generateVertexObjects(GameObject* object) {
-    /* ---- vertex buffer data and vertex attribute config ---- */
-    //use a vertex array object to store VBO configurations
-    unsigned int VAO, VBO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-    object->VBO = VBO;
-    object->VAO = VAO;
-
-    glBufferData(GL_ARRAY_BUFFER, sizeof(object->modelVerts), object->modelVerts, GL_DYNAMIC_DRAW);
-    //specify how our vertex data is arranged
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    // unbind VAO and VBO
-    glBindVertexArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void Game::framebuffer_size_callback(GLFWwindow* window, int width, int height) {

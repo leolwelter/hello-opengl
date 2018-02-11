@@ -3,16 +3,17 @@
 //
 
 #include "GameObject.h"
+#include <iostream>
 
-GameObject::GameObject(): modelVerts({
-                             {-0.7f, -0.2f, 0.0f},
-                             {-0.3f, -0.2f, 0.0f},
-                             {-0.5f, 0.3f, 0.0f}})
+GameObject::GameObject()
 {
+    std::cout << "DEFAULT OBJECT CONSTRUCTED" << std::endl;
 }
 
-GameObject::GameObject(Vertex* vertexData) {
-    for (int i = 0; i < 3; i++) {
+GameObject::GameObject(Vertex* vertexData, int mSize) {
+    modelSize = mSize;
+    modelVerts = (Vertex*)malloc(mSize * sizeof(Vertex));
+    for (int i = 0; i < mSize; i++) {
         modelVerts[i] = vertexData[i];
     }
 }

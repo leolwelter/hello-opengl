@@ -13,7 +13,7 @@ endif (NOT OPENGL_FOUND)
 # Source files
 set(SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(LIB_DIR "/usr/local/lib")
-set(SOURCES ${SRC_DIR}/main.cpp ${SRC_DIR}/glad.c src/Creature.cpp src/Creature.h src/Game.cpp src/Game.h src/GameObject.h src/GameObject.cpp)
+set(SOURCES ${SRC_DIR}/main.cpp ${SRC_DIR}/glad.c src/Creature.cpp src/Creature.h src/Game.cpp src/Game.h src/GameObject.h src/GameObject.cpp src/Bullet.cpp src/Bullet.h)
 
 include_directories(
         /home/leo/work/include/glad
