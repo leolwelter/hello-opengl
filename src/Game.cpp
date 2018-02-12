@@ -211,6 +211,17 @@ void Game::run() {
         glBindVertexArray(enemy.VAO);
         glDrawArrays(GL_TRIANGLES, 0, enemy.modelSize);
 
+
+        // check each bullet, delete those offscreen
+        for (std::vector<Bullet>::iterator it = bullets.begin(); it != bullets.end(); ) {
+            if ((it->modelVerts[2].y > 1.0f) || (it->modelVerts[2].y < -1.0f)) {
+                it = bullets.erase(it);
+            }
+            else {
+                it++;
+            }
+        }
+
         // render every bullet
         glUseProgram(bulletShader);
         for (auto &bullet : bullets) {
@@ -307,6 +318,7 @@ int Game::processInput(GLFWwindow* window) {
 
 bool Game::playerCooldown() {
     double cooling = (std::clock() - lastPlayerShotTime) / (double) 10000;
+    std::cout << "Last shot time: [" << lastPlayerShotTime << "] Cooldown: [" << cooling << "] Current: [ " << std::clock() << "] " << std::endl;
     return (cooling > 2);
 }
 
