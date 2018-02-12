@@ -7,10 +7,10 @@
 
 Bullet::Bullet(Vertex *vData, int side): GameObject(vData, 6) {
     if (side == PLAYER) {
-        speed = -0.03f;
+        speed = 0.03f;
     }
     else if (side == ENEMY) {
-        speed = 0.03f;
+        speed = -0.03f;
     }
 }
 

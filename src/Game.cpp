@@ -169,28 +169,18 @@ Game::Game() {
             {0.2f,  1.0f, 0.0f},
     };
 
-    Vertex bulletModel [] = {
-            {-0.02f, -0.05f, 0.0f},
-            {0.02f, 0.05f, 0.0f},
-            {-0.02f, 0.05f, 0.0f},
-
-            {0.02f, -0.05f,  0.0f},
-            {0.02f,  0.05f,  0.0f},
-            {-0.02f, -0.05f,  0.0f}
-    };
-
     player = Creature(playerModel);
     enemy = Creature(enemyModel);
-    Bullet b1 = Bullet(bulletModel, PLAYER);
 
 
     /* ---- vertex buffer data and vertex attribute config ---- */
     generateVertexObjects(&player);
     generateVertexObjects(&enemy);
-    generateVertexObjects(&b1);
 
-    bullets.emplace_back(b1);
 
+    /* ---- game logic initialization ---- */
+    lastPlayerShotTime = std::clock();
+    lastEnemyShotTime = std::clock();
 }
 
 void Game::run() {
@@ -304,11 +294,54 @@ int Game::processInput(GLFWwindow* window) {
         enemy.direction = -1;
     }
 
-    if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS) {
-        player.displayInfo();
-//        enemy.displayInfo();
+    if ((glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) && playerCooldown()) {
+        spawnBullet(PLAYER);
+        lastPlayerShotTime = std::clock();
+    }
+    if ((glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS) && enemyCooldown()) {
+        spawnBullet(ENEMY);
+        lastEnemyShotTime = std::clock();
     }
     return -1;
+}
+
+bool Game::playerCooldown() {
+    double cooling = (std::clock() - lastPlayerShotTime) / (double) 10000;
+    return (cooling > 2);
+}
+
+bool Game::enemyCooldown() {
+    double cooling = (std::clock() - lastEnemyShotTime) / (double) 10000;
+    return (cooling > 2);
+}
+
+void Game::spawnBullet(int side) {
+    float tipX, tipY;
+    if (side == PLAYER) {
+        tipX = player.modelVerts[0].x;
+        tipY = player.modelVerts[0].y;
+    }
+    else if (side == ENEMY) {
+        tipX = enemy.modelVerts[0].x;
+        tipY = enemy.modelVerts[0].y;
+    }
+    else {
+        std::cout << "INVALID BULLET SPAWN" << std::endl;
+        return;
+    }
+    Vertex bulletModel [] = {
+            {tipX - 0.02f, tipY - 0.04f, 0.0f},
+            {tipX + 0.02f, tipY + 0.04f, 0.0f},
+            {tipX - 0.02f, tipY + 0.04f, 0.0f},
+
+            {tipX - 0.02f, tipY - 0.04f, 0.0f},
+            {tipX + 0.02f, tipY - 0.04f, 0.0f},
+            {tipX + 0.02f, tipY + 0.04f, 0.0f},
+
+    };
+    Bullet bul(bulletModel, side);
+    generateVertexObjects(&bul);
+    bullets.push_back(bul);
 }
 
 void Game::framebuffer_size_callback(GLFWwindow* window, int width, int height) {

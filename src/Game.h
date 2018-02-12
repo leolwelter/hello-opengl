@@ -7,10 +7,12 @@
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include "Creature.h"
-#include "Bullet.h"
 #include <iostream>
 #include <vector>
+#include <ctime>
+
+#include "Creature.h"
+#include "Bullet.h"
 
 const unsigned int SCR_WIDTH = 1200;
 const unsigned int SCR_HEIGHT = 600;
@@ -33,8 +35,13 @@ private:
     void generateVertexObjects(GameObject* object);
     void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
-    // list of bullets
+    void spawnBullet(int side);
     std::vector<Bullet> bullets;
+
+    bool playerCooldown();
+    bool enemyCooldown();
+    std::clock_t lastPlayerShotTime;
+    std::clock_t lastEnemyShotTime;
 };
 
 
