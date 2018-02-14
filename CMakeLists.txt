@@ -12,13 +12,34 @@ endif (NOT OPENGL_FOUND)
 
 # Source files
 set(SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
-set(LIB_DIR "/usr/local/lib")
 set(SOURCES ${SRC_DIR}/main.cpp ${SRC_DIR}/glad.c src/Creature.cpp src/Creature.h src/Game.cpp src/Game.h src/GameObject.h src/GameObject.cpp src/Bullet.cpp src/Bullet.h)
 
+if (WIN32)
+    include_directories(
+            D:\\Libraries\\include
+    )
+
+
+    link_directories(
+            D:\\Libraries\\lib
+    )
+
+    # these are precious babies and can not be in the wrong order
+    find_library(
+            GL glfw3 pthread
+    )
+    set(GL_LIBS
+            glfw3 pthread
+    )
+endif(WIN32)
+
+if (UNIX)
 include_directories(
         /home/leo/work/include/glad
         /home/leo/work/include/
 )
+
+
 link_directories(
         /home/leo/work/lib/
         /usr/lib/
@@ -66,6 +87,7 @@ set(GL_LIBS
         Xau
         Xdmcp
 )
+endif(UNIX)
 
 # compile target from sources
 add_executable(open_gl_game ${SOURCES})

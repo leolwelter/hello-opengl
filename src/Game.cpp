@@ -2,6 +2,7 @@
 // Created by leo on 2/6/18.
 //
 
+#include <cmath>
 #include "Game.h"
 
 Game::Game() {
@@ -39,7 +40,7 @@ Game::Game() {
             "\n"
             "void main()\n"
             "{\n"
-            "    gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+            "    gl_Position = vec4(aPos, 1.0);\n"
             "}";
     unsigned int vertexShader;
     vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -55,14 +56,13 @@ Game::Game() {
         std::cout << "ERROR COMPILING VERTEX SHADER:\n" << log << std::endl;
     }
 
-    // FRAGMENT SHADER - ORANGE
+    // FRAGMENT SHADER - PLAYER
     const char* fragmentShaderSource = "\n"
             "#version 330 core\n"
             "out vec4 FragColor;\n"
-            "\n"
             "void main()\n"
             "{\n"
-            "    FragColor = vec4(0.4f, 0.4f, 1.0f, 1.0f);\n"
+            "    FragColor = vec4(0.0, 0.4, 1.0, 1.0);\n"
             "} ";
     unsigned int fragmentShader;
     fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -126,10 +126,10 @@ Game::Game() {
     fragmentShaderSource = "\n"
             "#version 330 core\n"
             "out vec4 FragColor;\n"
-            "\n"
+            "uniform vec4 bulletColor;\n"
             "void main()\n"
             "{\n"
-            "    FragColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);\n"
+            "    FragColor = bulletColor;\n"
             "} ";
     fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
@@ -184,6 +184,10 @@ Game::Game() {
 }
 
 void Game::run() {
+    // little graphical effect variables
+    float timeval, greenval;
+    int uniformLocation = glGetUniformLocation(bulletShader, "bulletColor");
+
     //render in a loop
     while(!glfwWindowShouldClose(window)) {
         glClearColor(.1f, .2f, .2f, 1.0f);
@@ -212,6 +216,7 @@ void Game::run() {
         glDrawArrays(GL_TRIANGLES, 0, enemy.modelSize);
 
 
+
         // check each bullet, delete those offscreen
         for (std::vector<Bullet>::iterator it = bullets.begin(); it != bullets.end(); ) {
             if ((it->modelVerts[2].y > 1.0f) || (it->modelVerts[2].y < -1.0f)) {
@@ -222,8 +227,13 @@ void Game::run() {
             }
         }
 
+        // simple graphical effect using uniforms
+        timeval = glfwGetTime();
+        greenval = (sin(timeval * 15.0) / 2.0f) + 0.5f;
+
         // render every bullet
         glUseProgram(bulletShader);
+        glUniform4f(uniformLocation, 1.0f, greenval, 0.0f, 1.0f);
         for (auto &bullet : bullets) {
             bullet.fly();
             getModelVertices(&bullet);
@@ -270,23 +280,16 @@ void Game::getModelVertices(GameObject* object) {
 }
 
 int Game::processInput(GLFWwindow* window) {
+    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) {
+        bool d = (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS);
+        bool l = (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS);
+        bool e = (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS);
+        bool sp= (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS);
+        bool s = (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS);
+    }
+
     if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, GL_TRUE);
-    }
-    else if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        player.direction =  UP;
-    }
-    else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        player.direction = DOWN;
-    }
-    else if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        player.direction = LEFT;
-    }
-    else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        player.direction = RIGHT;
-    }
-    else {
-        player.direction = -1;
     }
 
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
@@ -305,6 +308,23 @@ int Game::processInput(GLFWwindow* window) {
         enemy.direction = -1;
     }
 
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+        player.direction =  UP;
+    }
+    else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+        player.direction = DOWN;
+    }
+    else if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+        player.direction = LEFT;
+    }
+    else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+        player.direction = RIGHT;
+    }
+    else {
+        player.direction = -1;
+    }
+
+
     if ((glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) && playerCooldown()) {
         spawnBullet(PLAYER);
         lastPlayerShotTime = std::clock();
@@ -318,7 +338,7 @@ int Game::processInput(GLFWwindow* window) {
 
 bool Game::playerCooldown() {
     double cooling = (std::clock() - lastPlayerShotTime) / (double) 10000;
-    std::cout << "Last shot time: [" << lastPlayerShotTime << "] Cooldown: [" << cooling << "] Current: [ " << std::clock() << "] " << std::endl;
+//    std::cout << "Last shot time: [" << lastPlayerShotTime << "] Cooldown: [" << cooling << "] Current: [ " << std::clock() << "] " << std::endl;
     return (cooling > 2);
 }
 
