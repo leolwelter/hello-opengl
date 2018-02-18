@@ -2,7 +2,6 @@
 // Created by leo on 2/6/18.
 //
 
-#include <cmath>
 #include "Game.h"
 
 Game::Game() {
@@ -34,139 +33,21 @@ Game::Game() {
 
 
     /* ---- SHADER SOURCE AND COMPILATION ---- */
-    // VERTEX SHADER
-    const char* vertexShaderSource = "#version 330 core\n"
-            "layout (location = 0) in vec3 aPos;\n"
-            "\n"
-            "void main()\n"
-            "{\n"
-            "    gl_Position = vec4(aPos, 1.0);\n"
-            "}";
-    unsigned int vertexShader;
-    vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-    glCompileShader(vertexShader);
-
-    //check for compilation errors
-    int compSucces;
-    char log[512];
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &compSucces);
-    if (!compSucces) {
-        glGetShaderInfoLog(vertexShader, 512, NULL, log);
-        std::cout << "ERROR COMPILING VERTEX SHADER:\n" << log << std::endl;
-    }
-
-    // FRAGMENT SHADER - PLAYER
-    const char* fragmentShaderSource = "\n"
-            "#version 330 core\n"
-            "out vec4 FragColor;\n"
-            "void main()\n"
-            "{\n"
-            "    FragColor = vec4(0.0, 0.4, 1.0, 1.0);\n"
-            "} ";
-    unsigned int fragmentShader;
-    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
-
-    //check for compilation errors
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &compSucces);
-    if (!compSucces) {
-        glGetShaderInfoLog(fragmentShader, 512, NULL, log);
-        std::cout << "ERROR COMPILING FRAGMENT SHADER\n" << log << std::endl;
-    }
-
-    // link PLAYER shader
-    playerShader = glCreateProgram();
-    glAttachShader(playerShader, vertexShader);
-    glAttachShader(playerShader, fragmentShader);
-    glLinkProgram(playerShader);
-
-    //check for linking errors
-    glGetProgramiv(playerShader, GL_LINK_STATUS, &compSucces);
-    if (!compSucces) {
-        glGetProgramInfoLog(playerShader, 512, NULL, log);
-        std::cout << "ERROR LINKING SHADER PROGRAM\n" << log << std::endl;
-    }
-
-    // shader for enemy models
-    fragmentShaderSource = "\n"
-            "#version 330 core\n"
-            "out vec4 FragColor;\n"
-            "\n"
-            "void main()\n"
-            "{\n"
-            "    FragColor = vec4(1.0f, 0.4f, 0.4f, 1.0f);\n"
-            "} ";
-    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
-    //check for compilation errors
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &compSucces);
-    if (!compSucces) {
-        glGetShaderInfoLog(fragmentShader, 512, NULL, log);
-        std::cout << "ERROR COMPILING FRAGMENT SHADER\n" << log << std::endl;
-    }
-
-    // link ENEMY shader
-    enemyShader = glCreateProgram();
-    glAttachShader(enemyShader, vertexShader);
-    glAttachShader(enemyShader, fragmentShader);
-    glLinkProgram(enemyShader);
-
-    //check for linking errors
-    glGetProgramiv(enemyShader, GL_LINK_STATUS, &compSucces);
-    if (!compSucces) {
-        glGetProgramInfoLog(enemyShader, 512, NULL, log);
-        std::cout << "ERROR LINKING SHADER PROGRAM\n" << log << std::endl;
-    }
-
-
-    // BULLET shader
-    fragmentShaderSource = "\n"
-            "#version 330 core\n"
-            "out vec4 FragColor;\n"
-            "uniform vec4 bulletColor;\n"
-            "void main()\n"
-            "{\n"
-            "    FragColor = bulletColor;\n"
-            "} ";
-    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
-    //check for compilation errors
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &compSucces);
-    if (!compSucces) {
-        glGetShaderInfoLog(fragmentShader, 512, NULL, log);
-        std::cout << "ERROR COMPILING FRAGMENT SHADER\n" << log << std::endl;
-    }
-
-    // link BULLET shader
-    bulletShader = glCreateProgram();
-    glAttachShader(bulletShader, vertexShader);
-    glAttachShader(bulletShader, fragmentShader);
-    glLinkProgram(bulletShader);
-
-    //check for linking errors
-    glGetProgramiv(bulletShader, GL_LINK_STATUS, &compSucces);
-    if (!compSucces) {
-        glGetProgramInfoLog(bulletShader, 512, NULL, log);
-        std::cout << "ERROR LINKING SHADER PROGRAM\n" << log << std::endl;
-    }
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
+    playerShader = new Shader("../src/VertexShader.glsl", "../src/FragmentShader.glsl");
+    enemyShader = new Shader("../src/VertexShader.glsl", "../src/FragmentShader.glsl");
+    bulletShader = new Shader("../src/VertexShader.glsl", "../src/FragmentShader.glsl");
 
     /* ---- game objects ----*/
     Vertex playerModel [] = {
-            {0.0f,  -0.7f, 0.0f},
-            {-0.2f, -1.0f, 0.0f},
-            {0.2f,  -1.0f, 0.0f},
+            {0.0f,  -0.7f, 0.0f, 1.0f, 0.0f, 0.0f},
+            {-0.2f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f},
+            {0.2f,  -1.0f, 0.0f, 0.0f, 0.0f, 1.0f},
     };
 
     Vertex enemyModel [] = {
-            {0.0f,  0.7f, 0.0f},
-            {-0.2f, 1.0f, 0.0f},
-            {0.2f,  1.0f, 0.0f},
+            {0.0f,  0.7f, 0.0f, 0.0f, 0.0f, 1.0f},
+            {-0.2f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f},
+            {0.2f,  1.0f, 0.0f, 1.0f, 0.0f, 0.0f},
     };
 
     player = Creature(playerModel);
@@ -179,14 +60,13 @@ Game::Game() {
 
 
     /* ---- game logic initialization ---- */
-    lastPlayerShotTime = std::clock();
-    lastEnemyShotTime = std::clock();
+    lastPlayerShotTime = glfwGetTime();
+    lastEnemyShotTime = glfwGetTime();
 }
 
 void Game::run() {
     // little graphical effect variables
-    float timeval, greenval;
-    int uniformLocation = glGetUniformLocation(bulletShader, "bulletColor");
+    float timeval, flashColor;
 
     //render in a loop
     while(!glfwWindowShouldClose(window)) {
@@ -206,12 +86,12 @@ void Game::run() {
         }
 
         // render player
-        glUseProgram(playerShader);
+        playerShader->use();
         glBindVertexArray(player.VAO);
         glDrawArrays(GL_TRIANGLES, 0, player.modelSize);
 
         // render enemy
-        glUseProgram(enemyShader);
+        enemyShader->use();
         glBindVertexArray(enemy.VAO);
         glDrawArrays(GL_TRIANGLES, 0, enemy.modelSize);
 
@@ -229,13 +109,16 @@ void Game::run() {
 
         // simple graphical effect using uniforms
         timeval = glfwGetTime();
-        greenval = (sin(timeval * 15.0) / 2.0f) + 0.5f;
+        flashColor = (sin(timeval * 15.0) / 2.0f) + 0.3f;
 
         // render every bullet
-        glUseProgram(bulletShader);
-        glUniform4f(uniformLocation, 1.0f, greenval, 0.0f, 1.0f);
+        bulletShader->use();
         for (auto &bullet : bullets) {
             bullet.fly();
+            for (int i = 0; i < bullet.modelSize; i++) {
+                bullet.modelVerts[i].green = flashColor - 0.3f;
+                bullet.modelVerts[i].blue = flashColor - 0.4f;
+            }
             getModelVertices(&bullet);
             glBindVertexArray(bullet.VAO);
             glDrawArrays(GL_TRIANGLES, 0, bullet.modelSize);
@@ -266,8 +149,10 @@ void Game::generateVertexObjects(GameObject* object) {
     object->VAO = VAO;
     glBufferData(GL_ARRAY_BUFFER, object->modelSize * sizeof(Vertex), object->modelVerts, GL_DYNAMIC_DRAW);
     //specify how our vertex data is arranged
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
     // unbind VAO and VBO
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -280,14 +165,6 @@ void Game::getModelVertices(GameObject* object) {
 }
 
 int Game::processInput(GLFWwindow* window) {
-    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) {
-        bool d = (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS);
-        bool l = (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS);
-        bool e = (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS);
-        bool sp= (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS);
-        bool s = (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS);
-    }
-
     if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, GL_TRUE);
     }
@@ -327,56 +204,65 @@ int Game::processInput(GLFWwindow* window) {
 
     if ((glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) && playerCooldown()) {
         spawnBullet(PLAYER);
-        lastPlayerShotTime = std::clock();
+        lastPlayerShotTime = glfwGetTime();
     }
     if ((glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS) && enemyCooldown()) {
         spawnBullet(ENEMY);
-        lastEnemyShotTime = std::clock();
+        lastEnemyShotTime = glfwGetTime();
     }
     return -1;
 }
 
 bool Game::playerCooldown() {
-    double cooling = (std::clock() - lastPlayerShotTime) / (double) 10000;
-//    std::cout << "Last shot time: [" << lastPlayerShotTime << "] Cooldown: [" << cooling << "] Current: [ " << std::clock() << "] " << std::endl;
-    return (cooling > 2);
+    double cooling = (glfwGetTime() - lastPlayerShotTime);
+    return (cooling > 1);
 }
 
 bool Game::enemyCooldown() {
-    double cooling = (std::clock() - lastEnemyShotTime) / (double) 10000;
-    return (cooling > 2);
+    double cooling = (glfwGetTime() - lastEnemyShotTime);
+    return (cooling > 1);
 }
 
 void Game::spawnBullet(int side) {
     float tipX, tipY;
+    int vHor = -1;
+
     if (side == PLAYER) {
         tipX = player.modelVerts[0].x;
         tipY = player.modelVerts[0].y;
+        if (player.direction == LEFT)
+            vHor = LEFT;
+        else if (player.direction == RIGHT)
+            vHor = RIGHT;
     }
     else if (side == ENEMY) {
         tipX = enemy.modelVerts[0].x;
         tipY = enemy.modelVerts[0].y;
+        if (enemy.direction == LEFT)
+            vHor = LEFT;
+        else if (enemy.direction == RIGHT)
+            vHor = RIGHT;
     }
     else {
         std::cout << "INVALID BULLET SPAWN" << std::endl;
         return;
     }
-    Vertex bulletModel [] = {
-            {tipX - 0.02f, tipY - 0.04f, 0.0f},
-            {tipX + 0.02f, tipY + 0.04f, 0.0f},
-            {tipX - 0.02f, tipY + 0.04f, 0.0f},
 
-            {tipX - 0.02f, tipY - 0.04f, 0.0f},
-            {tipX + 0.02f, tipY - 0.04f, 0.0f},
-            {tipX + 0.02f, tipY + 0.04f, 0.0f},
+    Vertex bulletModel [] = {
+            {tipX - 0.02f, tipY - 0.04f, 0.0f, 1.0f, 0.0f, 0.0f},
+            {tipX + 0.02f, tipY + 0.04f, 0.0f, 1.0f, 0.0f, 0.0f},
+            {tipX - 0.02f, tipY + 0.04f, 0.0f, 1.0f, 0.0f, 0.0f},
+
+            {tipX - 0.02f, tipY - 0.04f, 0.0f, 1.0f, 0.0f, 0.0f},
+            {tipX + 0.02f, tipY - 0.04f, 0.0f, 1.0f, 0.0f, 0.0f},
+            {tipX + 0.02f, tipY + 0.04f, 0.0f, 1.0f, 0.0f, 0.0f},
 
     };
-    Bullet bul(bulletModel, side);
+    Bullet bul(bulletModel, side, vHor);
     generateVertexObjects(&bul);
     bullets.push_back(bul);
 }
 
 void Game::framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
-    std::cout << "Resizing: " << width << " , " << height << std::endl;
 }

@@ -22,16 +22,6 @@ void Creature::move(float dx, float dy, float dz) {
     }
 }
 
-void Creature::displayInfo() {
-    std::cout << "---- VERTEX DATA ----" << std::endl;
-    for (int i = 0; i < modelSize; i++) {
-        modelVerts[i] = modelVerts[i];
-        std::cout << "Vertex[" << i << "]" << std::endl;
-        std::cout << "X: " << modelVerts[i].x << std::endl;
-        std::cout << "Y: " << modelVerts[i].y << std::endl;
-        std::cout << "Z: " << modelVerts[i].z << std::endl;
-    }
-}
 
 void Creature::move(int direction) {
     switch (direction) {

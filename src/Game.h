@@ -10,9 +10,11 @@
 #include <iostream>
 #include <vector>
 #include <ctime>
+#include <cmath>
 
 #include "Creature.h"
 #include "Bullet.h"
+#include "Shader.h"
 
 const unsigned int SCR_WIDTH = 1200;
 const unsigned int SCR_HEIGHT = 600;
@@ -26,9 +28,9 @@ private:
     Creature enemy;
 
     GLFWwindow* window;
-    unsigned int playerShader;
-    unsigned int enemyShader;
-    unsigned int bulletShader;
+    Shader* playerShader;
+    Shader* enemyShader;
+    Shader* bulletShader;
 
     void getModelVertices(GameObject* object);
     int processInput(GLFWwindow *window);
@@ -40,8 +42,8 @@ private:
 
     bool playerCooldown();
     bool enemyCooldown();
-    std::clock_t lastPlayerShotTime;
-    std::clock_t lastEnemyShotTime;
+    double lastPlayerShotTime;
+    double lastEnemyShotTime;
 };
 
 

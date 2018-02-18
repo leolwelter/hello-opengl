@@ -13,14 +13,16 @@ enum SIDE {
     ENEMY
 };
 
+
 class Bullet: public GameObject {
 public:
-    Bullet(Vertex* vData, int side);
+    Bullet(Vertex* vData, int side, int vHor);
 
     // game actions
     void fly();
 private:
-    float speed;
+    float speedY;
+    float speedX;
 };
 
 

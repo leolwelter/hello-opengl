@@ -5,11 +5,13 @@
 #ifndef TEXTGAME_GAMEOBJECT_H
 #define TEXTGAME_GAMEOBJECT_H
 
+enum DIRECTION {
+    UP, LEFT, DOWN, RIGHT
+};
 
 struct Vertex {
-    float x;
-    float y;
-    float z;
+    float x, y, z;
+    float red, green, blue;
 };
 
 class GameObject {

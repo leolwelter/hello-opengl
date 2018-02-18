@@ -8,9 +8,7 @@
 #include "GameObject.h"
 
 
-enum DIRECTION {
-    UP, LEFT, DOWN, RIGHT
-};
+
 
 class Creature: public GameObject {
 public:
@@ -28,7 +26,6 @@ public:
     int getAttack() { return attack; };
     int getDefense() { return defense; };
     int getSpeed() { return speed; };
-    void displayInfo();
 
     // game actions
     void move(float dx, float dy, float dz);
