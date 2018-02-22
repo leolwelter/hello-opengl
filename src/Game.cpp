@@ -30,33 +30,45 @@ Game::Game() {
 
     //now we can work with gl functions
     glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
-
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     /* ---- SHADER SOURCE AND COMPILATION ---- */
-    playerShader = new Shader("../src/VertexShader.glsl", "../src/FragmentShader.glsl");
-    enemyShader = new Shader("../src/VertexShader.glsl", "../src/FragmentShader.glsl");
-    bulletShader = new Shader("../src/VertexShader.glsl", "../src/FragmentShader.glsl");
+    playerShader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/FragmentShader.glsl");
+    enemyShader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/FragmentShader.glsl");
+    bulletShader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/FragmentShader.glsl");
+    boxShader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/BoxShader.glsl");
+
 
     /* ---- game objects ----*/
-    Vertex playerModel [] = {
-            {0.0f,  -0.7f, 0.0f, 1.0f, 0.0f, 0.0f},
-            {-0.2f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f},
-            {0.2f,  -1.0f, 0.0f, 0.0f, 0.0f, 1.0f},
-    };
-
-    Vertex enemyModel [] = {
-            {0.0f,  0.7f, 0.0f, 0.0f, 0.0f, 1.0f},
-            {-0.2f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f},
-            {0.2f,  1.0f, 0.0f, 1.0f, 0.0f, 0.0f},
-    };
-
-    player = Creature(playerModel);
-    enemy = Creature(enemyModel);
+    player = Creature(0.0f, 0.0f, true);
+    enemy = Creature(0.0f, 0.0f, false);
+    box = Obstacle(0.0f, 0.0f);
 
 
     /* ---- vertex buffer data and vertex attribute config ---- */
     generateVertexObjects(&player);
     generateVertexObjects(&enemy);
+    generateVertexObjects(&box);
+
+
+    /* ---- texture loading ---- */
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    int width, height, nChannels;
+    unsigned char* texData = stbi_load("../assets/container.jpg", &width, &height, &nChannels, 0);
+
+    unsigned int texID;
+    glGenTextures(1, &texID);
+    glBindTexture(GL_TEXTURE_2D, texID);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, texData);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    stbi_image_free(texData);
+
+
 
 
     /* ---- game logic initialization ---- */
@@ -86,16 +98,19 @@ void Game::run() {
         }
 
         // render player
-        playerShader->use();
+        playerShader.use();
         glBindVertexArray(player.VAO);
         glDrawArrays(GL_TRIANGLES, 0, player.modelSize);
 
         // render enemy
-        enemyShader->use();
+        enemyShader.use();
         glBindVertexArray(enemy.VAO);
         glDrawArrays(GL_TRIANGLES, 0, enemy.modelSize);
 
-
+        // render box
+        boxShader.use();
+        glBindVertexArray(box.VAO);
+        glDrawArrays(GL_TRIANGLES, 0, box.modelSize);
 
         // check each bullet, delete those offscreen
         for (std::vector<Bullet>::iterator it = bullets.begin(); it != bullets.end(); ) {
@@ -107,12 +122,11 @@ void Game::run() {
             }
         }
 
-        // simple graphical effect using uniforms
-        timeval = glfwGetTime();
-        flashColor = (sin(timeval * 15.0) / 2.0f) + 0.3f;
 
         // render every bullet
-        bulletShader->use();
+        timeval = glfwGetTime();
+        flashColor = (sin(timeval * 15.0) / 2.0f) + 0.3f;
+        bulletShader.use();
         for (auto &bullet : bullets) {
             bullet.fly();
             for (int i = 0; i < bullet.modelSize; i++) {
@@ -148,11 +162,15 @@ void Game::generateVertexObjects(GameObject* object) {
     object->VBO = VBO;
     object->VAO = VAO;
     glBufferData(GL_ARRAY_BUFFER, object->modelSize * sizeof(Vertex), object->modelVerts, GL_DYNAMIC_DRAW);
-    //specify how our vertex data is arranged
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    // describe VERTEX POSITIONS
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    // describe VERTEX COLORS
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
+    // describe TEXTURE COORDINATES
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
     // unbind VAO and VBO
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -249,14 +267,14 @@ void Game::spawnBullet(int side) {
     }
 
     Vertex bulletModel [] = {
-            {tipX - 0.02f, tipY - 0.04f, 0.0f, 1.0f, 0.0f, 0.0f},
-            {tipX + 0.02f, tipY + 0.04f, 0.0f, 1.0f, 0.0f, 0.0f},
-            {tipX - 0.02f, tipY + 0.04f, 0.0f, 1.0f, 0.0f, 0.0f},
+            // Vertex Coordinates              // Colors         // 2D Texture Coords
+            {tipX - 0.01f, tipY - 0.04f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+            {tipX + 0.01f, tipY + 0.04f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+            {tipX - 0.01f, tipY + 0.04f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f},
 
-            {tipX - 0.02f, tipY - 0.04f, 0.0f, 1.0f, 0.0f, 0.0f},
-            {tipX + 0.02f, tipY - 0.04f, 0.0f, 1.0f, 0.0f, 0.0f},
-            {tipX + 0.02f, tipY + 0.04f, 0.0f, 1.0f, 0.0f, 0.0f},
-
+            {tipX - 0.01f, tipY - 0.04f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+            {tipX + 0.01f, tipY - 0.04f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+            {tipX + 0.01f, tipY + 0.04f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f},
     };
     Bullet bul(bulletModel, side, vHor);
     generateVertexObjects(&bul);
@@ -264,5 +282,5 @@ void Game::spawnBullet(int side) {
 }
 
 void Game::framebuffer_size_callback(GLFWwindow* window, int width, int height) {
-    glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+    glViewport(0, 0, width, height);
 }

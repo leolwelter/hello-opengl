@@ -6,6 +6,8 @@
 #define TEXTGAME_CREATURE_H
 
 #include "GameObject.h"
+#include <iostream>
+
 
 
 
@@ -14,6 +16,7 @@ class Creature: public GameObject {
 public:
     // constructors
     Creature();
+    Creature(float x, float y, bool isEnemy);
     Creature(Vertex* vertexData);
 
     // stat accessors

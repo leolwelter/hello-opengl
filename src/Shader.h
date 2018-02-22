@@ -13,6 +13,10 @@
 class Shader {
 public:
     // constructors
+    Shader():programID(0) {
+        std::cout << "Default Shader" << std::endl;
+    }
+
     Shader(const char* vertexPath, const char* fragmentPath) {
         std::string vertexCode;
         std::string fragmentCode;
@@ -104,7 +108,6 @@ public:
         glUniform1f(glGetUniformLocation(programID, name.c_str()), val);
     };
 
-private:
     unsigned int programID; //from glCreateProgram()
 
 

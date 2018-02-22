@@ -12,11 +12,15 @@ enum DIRECTION {
 struct Vertex {
     float x, y, z;
     float red, green, blue;
+    float texX, texY;
 };
+
 
 class GameObject {
 public:
+    // constructors
     GameObject();
+    GameObject(float x, float y, int mSize);
     GameObject(Vertex* vertexData, int mSize);
 
     // graphic info
@@ -24,6 +28,10 @@ public:
     unsigned int VAO;
     Vertex* modelVerts; //model vertex data
     int modelSize;
+
+private:
+    float coordX;
+    float coordY;
 };
 
 
