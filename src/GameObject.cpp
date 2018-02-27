@@ -24,3 +24,9 @@ GameObject::GameObject(Vertex* vertexData, int mSize) {
         modelVerts[i] = vertexData[i];
     }
 }
+
+glm::mat4 GameObject::reset() {
+    glm::mat4 trans(1.0f);
+    trans = glm::translate(trans, glm::vec3(coordX, coordY, coordZ));
+    return trans;
+}

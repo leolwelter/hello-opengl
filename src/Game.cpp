@@ -33,8 +33,8 @@ Game::Game() {
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     /* ---- SHADER SOURCE AND COMPILATION ---- */
-    playerShader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/FragmentShader.glsl");
-    enemyShader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/FragmentShader.glsl");
+    playerShader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/ShipShader.glsl");
+    enemyShader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/ShipShader.glsl");
     bulletShader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/FragmentShader.glsl");
     boxShader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/BoxShader.glsl");
 
@@ -44,7 +44,6 @@ Game::Game() {
     enemy = Creature(0.0f, 0.0f, false);
     box = Obstacle(0.0f, 0.0f);
 
-
     /* ---- vertex buffer data and vertex attribute config ---- */
     generateVertexObjects(&player);
     generateVertexObjects(&enemy);
@@ -52,24 +51,47 @@ Game::Game() {
 
 
     /* ---- texture loading ---- */
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     int width, height, nChannels;
     unsigned char* texData = stbi_load("../assets/container.jpg", &width, &height, &nChannels, 0);
-
-    unsigned int texID;
-    glGenTextures(1, &texID);
-    glBindTexture(GL_TEXTURE_2D, texID);
+    glGenTextures(1, &boxTex);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, boxTex);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, texData);
     glGenerateMipmap(GL_TEXTURE_2D);
     stbi_image_free(texData);
 
+    texData = stbi_load("../assets/ship.png", &width, &height, &nChannels, 0);
+    glGenTextures(1, &shipTex);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, shipTex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, texData);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    stbi_image_free(texData);
 
+    stbi_set_flip_vertically_on_load(true);
+    texData = stbi_load("../assets/awesomeface.png", &width, &height, &nChannels, 0);
+    glGenTextures(1, &faceTex);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, faceTex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, texData);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    stbi_image_free(texData);
 
+    enemyShader.use();
+    enemyShader.setInt("tex1", 1);
+
+    playerShader.use();
+    playerShader.setInt("tex1", 1);
+
+    boxShader.use();
+    boxShader.setInt("tex1", 0);
+    boxShader.setInt("tex2", 2);
 
     /* ---- game logic initialization ---- */
     lastPlayerShotTime = glfwGetTime();
@@ -77,66 +99,72 @@ Game::Game() {
 }
 
 void Game::run() {
-    // little graphical effect variables
-    float timeval, flashColor;
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, boxTex);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, shipTex);
 
-    //render in a loop
     while(!glfwWindowShouldClose(window)) {
         glClearColor(.1f, .2f, .2f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
-        processInput(window);
-        if (player.direction != -1) {
-            player.move(player.direction);
-            // bind and reload player model
-            getModelVertices(&player);
-        }
 
-        if (enemy.direction != -1) {
-            enemy.move(enemy.direction);
-            // bind and reload ENEMY model
-            getModelVertices(&enemy);
+        processInput(window);
+
+        // move player
+        glm::mat4 transform(1.0f);
+        if (player.direction == UP) {
+            player.coordY += player.getSpeed();
         }
+        else if (player.direction == LEFT) {
+            player.coordX += -player.getSpeed();
+        }
+        else if (player.direction == RIGHT) {
+            player.coordX += player.getSpeed();
+        }
+        else if (player.direction == DOWN) {
+            player.coordY += -player.getSpeed();
+        }
+        transform = glm::translate(transform, glm::vec3(player.coordX, player.coordY, 0.0f));
 
         // render player
         playerShader.use();
+        playerShader.setMat4("transform", transform);
         glBindVertexArray(player.VAO);
         glDrawArrays(GL_TRIANGLES, 0, player.modelSize);
 
+        // move enemy
+        transform = glm::mat4(1.0f);
+        if (enemy.direction == UP) {
+            enemy.coordY += enemy.getSpeed();
+        }
+        else if (enemy.direction == LEFT) {
+            enemy.coordX += -enemy.getSpeed();
+        }
+        else if (enemy.direction == RIGHT) {
+            enemy.coordX += enemy.getSpeed();
+        }
+        else if (enemy.direction == DOWN) {
+            enemy.coordY += -enemy.getSpeed();
+        }
+        transform = glm::translate(transform, glm::vec3(enemy.coordX, enemy.coordY, enemy.coordZ));
+
         // render enemy
         enemyShader.use();
+        enemyShader.setMat4("transform", transform);
         glBindVertexArray(enemy.VAO);
         glDrawArrays(GL_TRIANGLES, 0, enemy.modelSize);
 
+        // move box
+        transform = glm::mat4(1.0f);
+        transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+
         // render box
         boxShader.use();
+        boxShader.setMat4("transform", transform);
         glBindVertexArray(box.VAO);
         glDrawArrays(GL_TRIANGLES, 0, box.modelSize);
 
-        // check each bullet, delete those offscreen
-        for (std::vector<Bullet>::iterator it = bullets.begin(); it != bullets.end(); ) {
-            if ((it->modelVerts[2].y > 1.0f) || (it->modelVerts[2].y < -1.0f)) {
-                it = bullets.erase(it);
-            }
-            else {
-                it++;
-            }
-        }
 
-
-        // render every bullet
-        timeval = glfwGetTime();
-        flashColor = (sin(timeval * 15.0) / 2.0f) + 0.3f;
-        bulletShader.use();
-        for (auto &bullet : bullets) {
-            bullet.fly();
-            for (int i = 0; i < bullet.modelSize; i++) {
-                bullet.modelVerts[i].green = flashColor - 0.3f;
-                bullet.modelVerts[i].blue = flashColor - 0.4f;
-            }
-            getModelVertices(&bullet);
-            glBindVertexArray(bullet.VAO);
-            glDrawArrays(GL_TRIANGLES, 0, bullet.modelSize);
-        }
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -202,6 +230,7 @@ int Game::processInput(GLFWwindow* window) {
     else {
         enemy.direction = -1;
     }
+
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
         player.direction =  UP;

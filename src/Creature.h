@@ -28,11 +28,11 @@ public:
     int getHP() { return hp; };
     int getAttack() { return attack; };
     int getDefense() { return defense; };
-    int getSpeed() { return speed; };
+    float getSpeed() { return speed; };
 
     // game actions
-    void move(float dx, float dy, float dz);
-    void move(int direction);
+    glm::mat4 move(float dx, float dy, float dz);
+    glm::mat4 move(int direction);
     int direction;
 
 
@@ -40,7 +40,7 @@ private:
     int hp;
     int attack;
     int defense;
-    int speed;
+    float speed;
 };
 
 

@@ -108,6 +108,10 @@ public:
         glUniform1f(glGetUniformLocation(programID, name.c_str()), val);
     };
 
+    void setMat4(const std::string &name, glm::mat4 &mat) const {
+        unsigned int loc = glGetUniformLocation(programID, name.c_str());
+        glUniformMatrix4fv(loc, 1, GL_FALSE, &mat[0][0]);
+    };
     unsigned int programID; //from glCreateProgram()
 
 

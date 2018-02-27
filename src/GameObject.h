@@ -5,6 +5,12 @@
 #ifndef TEXTGAME_GAMEOBJECT_H
 #define TEXTGAME_GAMEOBJECT_H
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+
 enum DIRECTION {
     UP, LEFT, DOWN, RIGHT
 };
@@ -29,9 +35,11 @@ public:
     Vertex* modelVerts; //model vertex data
     int modelSize;
 
-private:
+    glm::mat4 reset();
+
     float coordX;
     float coordY;
+    float coordZ;
 };
 
 
