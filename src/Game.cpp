@@ -4,7 +4,8 @@
 
 #include "Game.h"
 
-Game::Game() {
+Game::Game(bool run)
+{
     std::cout << "Initializing..." << std::endl;
 
     glfwInit(); // create window
@@ -41,9 +42,9 @@ Game::Game() {
 
 
     /* ---- game objects ----*/
-    player = Creature(0.0f, 0.0f, true);
-    enemy = Creature(0.0f, 0.0f, false);
-    box = Obstacle(0.0f, 0.0f);
+    player = Creature(-1.0f, 0.0f, 0.0f, true);
+    enemy = Creature(1.0f, 0.0f, 0.0f, false);
+    box = Obstacle(0.0f, 0.0f, 0.0f);
 
     /* ---- vertex buffer data and vertex attribute config ---- */
     generateVertexObjects(&player);
@@ -97,6 +98,10 @@ Game::Game() {
     /* ---- game logic initialization ---- */
     lastPlayerShotTime = glfwGetTime();
     lastEnemyShotTime = glfwGetTime();
+
+    lastMouseX = SCR_WIDTH / 2;
+    lastMouseY = SCR_HEIGHT / 2;
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
 
 void Game::run() {
@@ -110,60 +115,33 @@ void Game::run() {
         glClearColor(.1f, .2f, .2f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        // calculate time delta
+        float frameT = glfwGetTime();
+        deltaT = frameT - lastFrameT;
+        lastFrameT = frameT;
+
+        // user input and calculations
         processInput(window);
 
         // model matrix, used for local object positions
         glm::mat4 model(1.0f);
-
 
         // view matrix, used for world coordinate space
         glm::mat4 view = camera.getView();
 
         // projection matrix (perspective not ortho)
         glm::mat4 projection(1.0f);
-        projection = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / SCR_HEIGHT, 0.1f, 100.0f);
+        projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / SCR_HEIGHT, 0.1f, 100.0f);
 
-
-
-        // move player
-        glm::mat4 transform(1.0f);
-        if (player.direction == UP) {
-            player.coordY += player.getSpeed();
-        }
-        else if (player.direction == LEFT) {
-            player.coordX += -player.getSpeed();
-        }
-        else if (player.direction == RIGHT) {
-            player.coordX += player.getSpeed();
-        }
-        else if (player.direction == DOWN) {
-            player.coordY += -player.getSpeed();
-        }
-        transform = glm::translate(transform, glm::vec3(player.coordX, player.coordY, 0.0f));
 
         // render player
         playerShader.use();
         playerShader.setMat4("model", model);
         playerShader.setMat4("view", view);
         playerShader.setMat4("projection", projection);
-
         glBindVertexArray(player.VAO);
         glDrawArrays(GL_TRIANGLES, 0, player.modelSize);
 
-
-        // move enemy
-        if (enemy.direction == UP) {
-            enemy.coordY += enemy.getSpeed();
-        }
-        else if (enemy.direction == LEFT) {
-            enemy.coordX += -enemy.getSpeed();
-        }
-        else if (enemy.direction == RIGHT) {
-            enemy.coordX += enemy.getSpeed();
-        }
-        else if (enemy.direction == DOWN) {
-            enemy.coordY += -enemy.getSpeed();
-        }
 
         // render enemy
         enemyShader.use();
@@ -173,7 +151,6 @@ void Game::run() {
         glBindVertexArray(enemy.VAO);
         glDrawArrays(GL_TRIANGLES, 0, enemy.modelSize);
 
-        // move box
 
         // render box
         boxShader.use();
@@ -182,7 +159,6 @@ void Game::run() {
         playerShader.setMat4("projection", projection);
         glBindVertexArray(box.VAO);
         glDrawArrays(GL_TRIANGLES, 0, box.modelSize);
-
 
 
         glfwSwapBuffers(window);
@@ -223,59 +199,30 @@ void Game::generateVertexObjects(GameObject* object) {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void Game::getModelVertices(GameObject* object) {
-    glBindVertexArray(object->VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, object->VBO);
-    glBufferData(GL_ARRAY_BUFFER, object->modelSize * sizeof(Vertex), object->modelVerts, GL_DYNAMIC_DRAW);
-}
 
 int Game::processInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, GL_TRUE);
     }
 
-    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-        enemy.direction =  UP;
-    }
-    else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-        enemy.direction = DOWN;
-    }
-    else if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-        enemy.direction = LEFT;
-    }
-    else if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-        enemy.direction = RIGHT;
-    }
-    else {
-        enemy.direction = -1;
-    }
-
-
+    // position
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        player.direction =  UP;
+        player.coordY += deltaT * player.getSpeed();
+        camera.cameraPos += deltaT * player.getSpeed() * camera.cameraFront;
     }
-    else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        player.direction = DOWN;
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+        player.coordY -= deltaT * player.getSpeed();
+        camera.cameraPos -= deltaT * player.getSpeed() * camera.cameraFront;
     }
-    else if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        player.direction = LEFT;
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+        player.coordX -= deltaT * player.getSpeed();
+        camera.cameraPos -= deltaT * player.getSpeed() * camera.cameraRight;
     }
-    else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        player.direction = RIGHT;
-    }
-    else {
-        player.direction = -1;
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+        player.coordX += deltaT * player.getSpeed();
+        camera.cameraPos += deltaT * player.getSpeed() * camera.cameraRight;
     }
 
-
-    if ((glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) && playerCooldown()) {
-        spawnBullet(PLAYER);
-        lastPlayerShotTime = glfwGetTime();
-    }
-    if ((glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS) && enemyCooldown()) {
-        spawnBullet(ENEMY);
-        lastEnemyShotTime = glfwGetTime();
-    }
     return -1;
 }
 
@@ -331,4 +278,32 @@ void Game::spawnBullet(int side) {
 
 void Game::framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
+}
+
+void Game::mouse_callback(GLFWwindow* window, double x, double y) {
+    // calculate mouse offset change
+    float dX = x - lastMouseX;
+    float dY = y - lastMouseY;
+    lastMouseX = x;
+    lastMouseY = y;
+
+    float sensitivity = 0.03f;
+    dX *= sensitivity;
+    dY *= sensitivity;
+
+
+    // add offset value to camera yaw/pitch
+    camera.pitch -= dY;
+    camera.yaw += dX;
+
+    if (camera.pitch > 89.0f)
+        camera.pitch = 89.0f;
+    else if (camera.pitch < -89.0f)
+        camera.pitch = -89.0f;
+
+    // recalculate camera front vector
+    float faceX = cos(glm::radians(camera.pitch)) * cos(glm::radians(camera.yaw));
+    float faceY = sin(glm::radians(camera.pitch));
+    float faceZ = cos(glm::radians(camera.pitch)) * sin(glm::radians(camera.yaw));
+    camera.cameraFront = glm::normalize(glm::vec3(faceX, faceY, faceZ));
 }

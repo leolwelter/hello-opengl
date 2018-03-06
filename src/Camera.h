@@ -12,20 +12,21 @@
 
 class Camera {
 public:
-    Camera() {
+    Camera(): pitch(0.0f), yaw(0.0f) {
         // Gram-Schmidt process to get camera coordinate space
         cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
         cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
         cameraDir = glm::normalize(cameraPos - cameraTarget);
-        cameraRight = glm::normalize(glm::cross(glm::vec3(.0f, 1.0f, .0f),cameraDir));
+        cameraRight = glm::normalize(glm::cross(glm::vec3(.0f, 1.0f, .0f), cameraDir));
         cameraUp = glm::normalize(glm::cross(cameraDir, cameraRight));
         cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
     }
 
     glm::mat4 getView() {
-        return glm::lookAt(cameraPos,
-                    cameraPos + cameraFront,
-                    cameraUp
+        return glm::lookAt(
+                cameraPos,
+                cameraPos + cameraFront,
+                cameraUp
         );
     }
 
@@ -35,6 +36,9 @@ public:
     glm::vec3 cameraRight;
     glm::vec3 cameraUp;
     glm::vec3 cameraFront;
+
+    float pitch;
+    float yaw;
 };
 
 

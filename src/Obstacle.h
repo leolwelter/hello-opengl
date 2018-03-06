@@ -11,7 +11,7 @@
 class Obstacle: public GameObject {
 public:
     Obstacle();
-    Obstacle(float x, float y);
+    Obstacle(float x, float y, float z);
     Obstacle(Vertex* vertexData);
 
 private:

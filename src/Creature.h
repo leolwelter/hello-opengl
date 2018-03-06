@@ -16,7 +16,7 @@ class Creature: public GameObject {
 public:
     // constructors
     Creature();
-    Creature(float x, float y, bool isEnemy);
+    Creature(float x, float y, float z, bool isEnemy);
     Creature(Vertex* vertexData);
 
     // stat accessors

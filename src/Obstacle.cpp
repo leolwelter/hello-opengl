@@ -53,13 +53,15 @@ Obstacle::Obstacle()
 }
 
 
-Obstacle::Obstacle(float x, float y)
+Obstacle::Obstacle(float x, float y, float z)
     :GameObject(x, y, 36)
 {
     for (int i = 0; i < modelSize; i++) {
         modelVerts[i] = defaultObstacleModel[i];
         modelVerts[i].x += x;
         modelVerts[i].y += y;
+        modelVerts[i].z += z;
+
     }
 }
 

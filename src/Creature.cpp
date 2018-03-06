@@ -5,15 +5,15 @@
 #include "Creature.h"
 
 static const Vertex defaultPlayerModel [] = {
-        {0.0f,   -0.6f, 0.0f, 1.0f, 0.0f, 0.0f, 0.5f, 0.0f},
-        {-0.20f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.1f, 0.8f},
-        {0.20f,  -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.9f, 0.8f},
+        {0.0f,    0.2f, 0.0f, 0.0f, 0.0f, 1.0f, 0.5f, 0.0f},
+        {-0.20f, -0.20f, 0.0f, 0.0f, 0.0f, 1.0f, 0.1f, 0.8f},
+        {0.20f,  -0.20f, 0.0f, 0.0f, 0.0f, 1.0f, 0.9f, 0.8f},
 };
 
 static const Vertex defaultEnemyModel [] = {
-        {0.0f,   0.6f, 0.0f, 0.0f, 0.0f, 1.0f, 0.5f, 0.0f},
-        {-0.20f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.1f, 0.8f},
-        {0.20f,  1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.9f, 0.8f},
+        {0.0f,    0.2f, 0.0f, 1.0f, 0.0f, 0.0f, 0.5f, 0.0f},
+        {-0.20f, -0.20f, 0.0f, 1.0f, 0.0f, 0.0f, 0.1f, 0.8f},
+        {0.20f,  -0.20f, 0.0f, 1.0f, 0.0f, 0.0f, 0.9f, 0.8f},
 };
 
 Creature::Creature()
@@ -21,14 +21,15 @@ Creature::Creature()
 {
 }
 
-Creature::Creature(float x, float y, bool isEnemy=true)
-        :hp(0), attack(0), defense(0), speed(0.015f), GameObject(x, y, 3)
+Creature::Creature(float x, float y, float z, bool isEnemy=true)
+        :hp(0), attack(0), defense(0), speed(1.0f), GameObject(x, y, 3)
 {
     if (isEnemy){
         for (int i = 0; i < modelSize; i++) {
             modelVerts[i] = defaultPlayerModel[i];
             modelVerts[i].x += x;
             modelVerts[i].y += y;
+            modelVerts[i].z += z;
         }
     }
     else {
@@ -36,6 +37,7 @@ Creature::Creature(float x, float y, bool isEnemy=true)
             modelVerts[i] = defaultEnemyModel[i];
             modelVerts[i].x += x;
             modelVerts[i].y += y;
+            modelVerts[i].z += z;
         }
     }
 }

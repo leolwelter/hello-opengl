@@ -1,8 +1,13 @@
 #include "Game.h"
 
-
 int main(int argc, char** argv) {
-    Game g;
-    g.run();
+    // initialize
+    Game &game = Game::getInstance();
+    // register static callbacks
+    glfwSetCursorPosCallback(game.window, &Game::mouse_callback_static);
+
+    // begin game logic
+    game.run();
     return 0;
 }
+
