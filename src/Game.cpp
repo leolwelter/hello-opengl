@@ -114,15 +114,15 @@ void Game::run() {
 
         // model matrix, used for local object positions
         glm::mat4 model(1.0f);
-        model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.0f, 1.0f, .0f));
+
 
         // view matrix, used for world coordinate space
-        glm::mat4 view(1.0f);
-        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+        glm::mat4 view = camera.getView();
 
         // projection matrix (perspective not ortho)
         glm::mat4 projection(1.0f);
         projection = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / SCR_HEIGHT, 0.1f, 100.0f);
+
 
 
         // move player

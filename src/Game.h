@@ -21,6 +21,7 @@
 #include "Bullet.h"
 #include "Shader.h"
 #include "Obstacle.h"
+#include "Camera.h"
 
 const unsigned int SCR_WIDTH = 1200;
 const unsigned int SCR_HEIGHT = 600;
@@ -33,6 +34,7 @@ private:
     Creature player;
     Creature enemy;
     Obstacle box;
+    Camera camera;
 
     GLFWwindow* window;
     Shader playerShader;
