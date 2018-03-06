@@ -15,22 +15,23 @@ Game::Game() {
     window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Dylan's Game", nullptr, nullptr);
     glfwMakeContextCurrent(window);
 
-    //init window
+    // init window
     if (window == NULL) {
         std::cout << "GL Borked :(" << std::endl;
         glfwTerminate();
         return;
     }
 
-    //init GLAD
+    // init GLAD
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         std::cout << "GLAD Borked :(" << std::endl;
         return;
     }
 
-    //now we can work with gl functions
+    // now we can work with gl functions
     glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glEnable(GL_DEPTH_TEST);
 
     /* ---- SHADER SOURCE AND COMPILATION ---- */
     playerShader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/ShipShader.glsl");
@@ -99,6 +100,7 @@ Game::Game() {
 }
 
 void Game::run() {
+    // bind textures
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, boxTex);
     glActiveTexture(GL_TEXTURE1);
@@ -106,9 +108,22 @@ void Game::run() {
 
     while(!glfwWindowShouldClose(window)) {
         glClearColor(.1f, .2f, .2f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         processInput(window);
+
+        // model matrix, used for local object positions
+        glm::mat4 model(1.0f);
+        model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.0f, 1.0f, .0f));
+
+        // view matrix, used for world coordinate space
+        glm::mat4 view(1.0f);
+        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+
+        // projection matrix (perspective not ortho)
+        glm::mat4 projection(1.0f);
+        projection = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / SCR_HEIGHT, 0.1f, 100.0f);
+
 
         // move player
         glm::mat4 transform(1.0f);
@@ -128,12 +143,15 @@ void Game::run() {
 
         // render player
         playerShader.use();
-        playerShader.setMat4("transform", transform);
+        playerShader.setMat4("model", model);
+        playerShader.setMat4("view", view);
+        playerShader.setMat4("projection", projection);
+
         glBindVertexArray(player.VAO);
         glDrawArrays(GL_TRIANGLES, 0, player.modelSize);
 
+
         // move enemy
-        transform = glm::mat4(1.0f);
         if (enemy.direction == UP) {
             enemy.coordY += enemy.getSpeed();
         }
@@ -146,21 +164,22 @@ void Game::run() {
         else if (enemy.direction == DOWN) {
             enemy.coordY += -enemy.getSpeed();
         }
-        transform = glm::translate(transform, glm::vec3(enemy.coordX, enemy.coordY, enemy.coordZ));
 
         // render enemy
         enemyShader.use();
-        enemyShader.setMat4("transform", transform);
+        playerShader.setMat4("model", model);
+        playerShader.setMat4("view", view);
+        playerShader.setMat4("projection", projection);
         glBindVertexArray(enemy.VAO);
         glDrawArrays(GL_TRIANGLES, 0, enemy.modelSize);
 
         // move box
-        transform = glm::mat4(1.0f);
-        transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
 
         // render box
         boxShader.use();
-        boxShader.setMat4("transform", transform);
+        playerShader.setMat4("model", model);
+        playerShader.setMat4("view", view);
+        playerShader.setMat4("projection", projection);
         glBindVertexArray(box.VAO);
         glDrawArrays(GL_TRIANGLES, 0, box.modelSize);
 
