@@ -306,4 +306,5 @@ void Game::mouse_callback(GLFWwindow* window, double x, double y) {
     float faceY = sin(glm::radians(camera.pitch));
     float faceZ = cos(glm::radians(camera.pitch)) * sin(glm::radians(camera.yaw));
     camera.cameraFront = glm::normalize(glm::vec3(faceX, faceY, faceZ));
+    camera.cameraRight = glm::normalize(glm::cross(camera.cameraFront, camera.cameraUp));
 }
