@@ -10,16 +10,31 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+const float YAW         = -90.0f;
+const float PITCH       =  0.0f;
+const float SPEED       =  2.5f;
+const float SENSITIVITY =  0.2f;
+const float ZOOM        =  45.0f;
+
 class Camera {
 public:
-    Camera(): pitch(0.0f), yaw(0.0f) {
+    Camera(): pitch(PITCH), yaw(YAW), sensitivity(SENSITIVITY){
         // Gram-Schmidt process to get camera coordinate space
         cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
         cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
         cameraDir = glm::normalize(cameraPos - cameraTarget);
         cameraRight = glm::normalize(glm::cross(glm::vec3(.0f, 1.0f, .0f), cameraDir));
-        cameraUp = glm::normalize(glm::cross(cameraDir, cameraRight));
+        cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
         cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+    }
+
+    // Constructor with vectors
+    Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw_g = YAW, float pitch_g = PITCH) : cameraFront(glm::vec3(0.0f, 0.0f, -1.0f)), sensitivity(SENSITIVITY)
+    {
+        cameraPos = position;
+        cameraUp = up;
+        yaw = yaw_g;
+        pitch = pitch_g;
     }
 
     glm::mat4 getView() {
@@ -39,6 +54,7 @@ public:
 
     float pitch;
     float yaw;
+    float sensitivity;
 };
 
 

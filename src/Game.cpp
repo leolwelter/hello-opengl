@@ -42,8 +42,8 @@ Game::Game(bool run)
 
 
     /* ---- game objects ----*/
-    player = Creature(-1.0f, 0.0f, 0.0f, true);
-    enemy = Creature(1.0f, 0.0f, 0.0f, false);
+    player = Creature(-0.5f, 0.0f, 6.0f, true);
+    enemy = Creature(0.5f, 0.0f, 6.0f, false);
     box = Obstacle(0.0f, 0.0f, 0.0f);
 
     /* ---- vertex buffer data and vertex attribute config ---- */
@@ -102,6 +102,7 @@ Game::Game(bool run)
     lastMouseX = SCR_WIDTH / 2;
     lastMouseY = SCR_HEIGHT / 2;
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    firstMouseInput = true;
 }
 
 void Game::run() {
@@ -126,12 +127,12 @@ void Game::run() {
         // model matrix, used for local object positions
         glm::mat4 model(1.0f);
 
-        // view matrix, used for world coordinate space
+        // view matrix, used for world coordinate space (glm::lookAt)
         glm::mat4 view = camera.getView();
 
         // projection matrix (perspective not ortho)
         glm::mat4 projection(1.0f);
-        projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / SCR_HEIGHT, 0.1f, 100.0f);
+        projection = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / SCR_HEIGHT, 0.1f, 100.0f);
 
 
         // render player
@@ -281,19 +282,25 @@ void Game::framebuffer_size_callback(GLFWwindow* window, int width, int height) 
 }
 
 void Game::mouse_callback(GLFWwindow* window, double x, double y) {
+    // account for large difference of mouse position when cursor enters
+    if (firstMouseInput) {
+        lastMouseX = x;
+        lastMouseY = y;
+        firstMouseInput = false;
+    }
+
     // calculate mouse offset change
     float dX = x - lastMouseX;
-    float dY = y - lastMouseY;
+    float dY = lastMouseY - y;
     lastMouseX = x;
     lastMouseY = y;
 
-    float sensitivity = 0.03f;
-    dX *= sensitivity;
-    dY *= sensitivity;
+    dX *= camera.sensitivity;
+    dY *= camera.sensitivity;
 
 
     // add offset value to camera yaw/pitch
-    camera.pitch -= dY;
+    camera.pitch += dY;
     camera.yaw += dX;
 
     if (camera.pitch > 89.0f)
