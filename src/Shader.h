@@ -112,6 +112,10 @@ public:
         unsigned int loc = glGetUniformLocation(programID, name.c_str());
         glUniformMatrix4fv(loc, 1, GL_FALSE, &mat[0][0]);
     };
+    void setVec3(const std::string &name, glm::vec3 &vec) const {
+        unsigned int loc = glGetUniformLocation(programID, name.c_str());
+        glUniform3fv(loc, 1, &vec[0]);
+    };
     unsigned int programID; //from glCreateProgram()
 
 

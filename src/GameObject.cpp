@@ -10,10 +10,10 @@ GameObject::GameObject()
     std::cout << "DEFAULT OBJECT CONSTRUCTED" << std::endl;
 }
 
-GameObject::GameObject(float x, float y, int mSize)
+GameObject::GameObject(float x, float y, float z, int mSize)
         : coordX(x), coordY(y), modelSize(mSize)
 {
-    std::cout << "NEW OBJECT: [" << x << ", " << y << "]" << std::endl;
+    std::cout << "NEW OBJECT: [" << x << ", " << y << ", " << z << "]" << std::endl;
     modelVerts = (Vertex*)malloc(mSize * sizeof(Vertex));
 }
 

@@ -12,7 +12,7 @@ class Obstacle: public GameObject {
 public:
     Obstacle();
     Obstacle(float x, float y, float z);
-    Obstacle(Vertex* vertexData);
+    Obstacle(float x, float y, float z, float scaleX, float scaleY, float scaleZ);
 
 private:
 

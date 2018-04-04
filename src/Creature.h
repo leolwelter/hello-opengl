@@ -17,7 +17,7 @@ public:
     // constructors
     Creature();
     Creature(float x, float y, float z, bool isEnemy);
-    Creature(Vertex* vertexData);
+    Creature(float x, float y, float z, float scaleX, float scaleY, float scaleZ, bool isEnemy);
 
     // stat accessors
     void setHP(int hp_t) { hp = hp_t; };

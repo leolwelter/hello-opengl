@@ -26,7 +26,7 @@ class GameObject {
 public:
     // constructors
     GameObject();
-    GameObject(float x, float y, int mSize);
+    GameObject(float x, float y, float z, int mSize);
     GameObject(Vertex* vertexData, int mSize);
 
     // graphic info

@@ -54,7 +54,7 @@ Obstacle::Obstacle()
 
 
 Obstacle::Obstacle(float x, float y, float z)
-    :GameObject(x, y, 36)
+    :GameObject(x, y, z, 36)
 {
     for (int i = 0; i < modelSize; i++) {
         modelVerts[i] = defaultObstacleModel[i];
@@ -66,7 +66,16 @@ Obstacle::Obstacle(float x, float y, float z)
 }
 
 
-Obstacle::Obstacle(Vertex *vertexData)
-    :GameObject(vertexData, 6)
+Obstacle::Obstacle(float x, float y, float z, float scaleX, float scaleY, float scaleZ)
+        :GameObject(x, y, z, 36)
 {
+    for (int i = 0; i < modelSize; i++) {
+        modelVerts[i] = defaultObstacleModel[i];
+        modelVerts[i].x *= scaleX;
+        modelVerts[i].y *= scaleY;
+        modelVerts[i].z *= scaleZ;
+        modelVerts[i].x += x;
+        modelVerts[i].y += y;
+        modelVerts[i].z += z;
+    }
 }

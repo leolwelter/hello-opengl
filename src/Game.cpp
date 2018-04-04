@@ -35,22 +35,24 @@ Game::Game(bool run)
     glEnable(GL_DEPTH_TEST);
 
     /* ---- SHADER SOURCE AND COMPILATION ---- */
-    playerShader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/ShipShader.glsl");
-    enemyShader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/ShipShader.glsl");
-    bulletShader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/FragmentShader.glsl");
+    playerShader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/FragmentShader.glsl");
+    enemyShader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/FragmentShader.glsl");
     boxShader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/BoxShader.glsl");
-
+    sunShader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/LightSourceFragmentShader.glsl");
 
     /* ---- game objects ----*/
-    player = Creature(-0.5f, 0.0f, 6.0f, true);
-    enemy = Creature(0.5f, 0.0f, 6.0f, false);
+    player = Creature(0.0f, -.2f, -2.0f, .2f, .2f, .2f, true);
+    enemy = Creature(0.0f, -.2f, 2.0f, .2f, .2f, .2f, false);
     box = Obstacle(0.0f, 0.0f, 0.0f);
+    sun = LightSource(0.0f, 10.0f, -5.0f);
+    floor = Obstacle(0.0f, -0.2f, 0.0f, 15.0f, 0.1f, 15.0f);
 
     /* ---- vertex buffer data and vertex attribute config ---- */
     generateVertexObjects(&player);
     generateVertexObjects(&enemy);
     generateVertexObjects(&box);
-
+    generateVertexObjects(&sun);
+    generateVertexObjects(&floor);
 
     /* ---- texture loading ---- */
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -77,7 +79,7 @@ Game::Game(bool run)
     stbi_image_free(texData);
 
     stbi_set_flip_vertically_on_load(true);
-    texData = stbi_load("../assets/awesomeface.png", &width, &height, &nChannels, 0);
+    texData = stbi_load("../assets/ship.png", &width, &height, &nChannels, 0);
     glGenTextures(1, &faceTex);
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, faceTex);
@@ -85,6 +87,7 @@ Game::Game(bool run)
     glGenerateMipmap(GL_TEXTURE_2D);
     stbi_image_free(texData);
 
+    // assign textures to shader uniforms
     enemyShader.use();
     enemyShader.setInt("tex1", 1);
 
@@ -113,7 +116,7 @@ void Game::run() {
     glBindTexture(GL_TEXTURE_2D, shipTex);
 
     while(!glfwWindowShouldClose(window)) {
-        glClearColor(.1f, .2f, .2f, 1.0f);
+        glClearColor(.1f, .1f, .1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // calculate time delta
@@ -134,33 +137,12 @@ void Game::run() {
         glm::mat4 projection(1.0f);
         projection = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / SCR_HEIGHT, 0.1f, 100.0f);
 
-
-        // render player
-        playerShader.use();
-        playerShader.setMat4("model", model);
-        playerShader.setMat4("view", view);
-        playerShader.setMat4("projection", projection);
-        glBindVertexArray(player.VAO);
-        glDrawArrays(GL_TRIANGLES, 0, player.modelSize);
-
-
-        // render enemy
-        enemyShader.use();
-        playerShader.setMat4("model", model);
-        playerShader.setMat4("view", view);
-        playerShader.setMat4("projection", projection);
-        glBindVertexArray(enemy.VAO);
-        glDrawArrays(GL_TRIANGLES, 0, enemy.modelSize);
-
-
-        // render box
-        boxShader.use();
-        playerShader.setMat4("model", model);
-        playerShader.setMat4("view", view);
-        playerShader.setMat4("projection", projection);
-        glBindVertexArray(box.VAO);
-        glDrawArrays(GL_TRIANGLES, 0, box.modelSize);
-
+        // render game objects
+        renderObject(player, playerShader, model, view, projection);
+        renderObject(enemy, enemyShader, model, view, projection);
+        renderObject(box, boxShader, model, view, projection);
+        renderObject(sun, sunShader, model, view, projection);
+        renderObject(floor, boxShader, model, view, projection);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -173,6 +155,16 @@ void Game::run() {
     glfwTerminate();
 }
 
+
+void Game::renderObject(GameObject object, Shader shader, glm::mat4 model, glm::mat4 view, glm::mat4 projection) {
+    shader.use();
+    shader.setMat4("model", model);
+    shader.setMat4("view", view);
+    shader.setMat4("projection", projection);
+    shader.setVec3("lColor", sun.color);
+    glBindVertexArray(object.VAO);
+    glDrawArrays(GL_TRIANGLES, 0, object.modelSize);
+}
 void Game::generateVertexObjects(GameObject* object) {
     /* ---- vertex buffer data and vertex attribute config ---- */
     //use a vertex array object to store VBO configurations

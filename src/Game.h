@@ -22,6 +22,7 @@
 #include "Shader.h"
 #include "Obstacle.h"
 #include "Camera.h"
+#include "LightSource.h"
 
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
@@ -55,13 +56,18 @@ private:
     Creature player;
     Creature enemy;
     Obstacle box;
+    Obstacle floor;
     Camera camera;
+    LightSource sun;
 
     Shader playerShader;
     Shader enemyShader;
     Shader bulletShader;
     Shader boxShader;
+    Shader sunShader;
+
     std::vector<Bullet> bullets;
+    std::vector<GameObject> objects;
 
     unsigned int boxTex, shipTex, faceTex;
     double lastPlayerShotTime;
@@ -71,7 +77,7 @@ private:
     float lastMouseX;
     float lastMouseY;
 
-    int processInput(GLFWwindow *window);
+    void renderObject(GameObject object, Shader shader, glm::mat4 model, glm::mat4 view, glm::mat4 projection);    int processInput(GLFWwindow *window);
     void generateVertexObjects(GameObject* object);
     static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
     void spawnBullet(int side);
