@@ -24,8 +24,8 @@
 #include "Camera.h"
 #include "LightSource.h"
 
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
+const unsigned int SCR_WIDTH = 1200;
+const unsigned int SCR_HEIGHT = 800;
 
 class Game {
 public:
@@ -77,7 +77,7 @@ private:
     float lastMouseX;
     float lastMouseY;
 
-    void renderObject(GameObject object, Shader shader, glm::mat4 model, glm::mat4 view, glm::mat4 projection);    int processInput(GLFWwindow *window);
+    void renderObject(GameObject object, Shader shader, glm::mat4 view, glm::mat4 projection);    int processInput(GLFWwindow *window);
     void generateVertexObjects(GameObject* object);
     static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
     void spawnBullet(int side);

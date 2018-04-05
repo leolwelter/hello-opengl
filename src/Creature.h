@@ -16,8 +16,7 @@ class Creature: public GameObject {
 public:
     // constructors
     Creature();
-    Creature(float x, float y, float z, bool isEnemy);
-    Creature(float x, float y, float z, float scaleX, float scaleY, float scaleZ, bool isEnemy);
+    Creature(float x, float y, float z);
 
     // stat accessors
     void setHP(int hp_t) { hp = hp_t; };

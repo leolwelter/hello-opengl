@@ -41,10 +41,10 @@ Game::Game(bool run)
     sunShader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/LightSourceFragmentShader.glsl");
 
     /* ---- game objects ----*/
-    player = Creature(0.0f, -.2f, -2.0f, .2f, .2f, .2f, true);
-    enemy = Creature(0.0f, -.2f, 2.0f, .2f, .2f, .2f, false);
+    player = Creature(0.5f, -0.2f, 0.0f);
+    enemy =  Creature(1.0f, -0.2f, 0.0f);
     box = Obstacle(0.0f, 0.0f, 0.0f);
-    sun = LightSource(0.0f, 10.0f, -5.0f);
+    sun = LightSource(10.0f, 10.0f, 0.0f);
     floor = Obstacle(0.0f, -0.2f, 0.0f, 15.0f, 0.1f, 15.0f);
 
     /* ---- vertex buffer data and vertex attribute config ---- */
@@ -106,6 +106,7 @@ Game::Game(bool run)
     lastMouseY = SCR_HEIGHT / 2;
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     firstMouseInput = true;
+
 }
 
 void Game::run() {
@@ -127,8 +128,6 @@ void Game::run() {
         // user input and calculations
         processInput(window);
 
-        // model matrix, used for local object positions
-        glm::mat4 model(1.0f);
 
         // view matrix, used for world coordinate space (glm::lookAt)
         glm::mat4 view = camera.getView();
@@ -137,12 +136,18 @@ void Game::run() {
         glm::mat4 projection(1.0f);
         projection = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / SCR_HEIGHT, 0.1f, 100.0f);
 
+        // update sun position
+        float tmpX = sun.coordX * cos(deltaT) - sun.coordZ * sin(deltaT);
+        float tmpZ = sun.coordZ * cos(deltaT) + sun.coordX * sin(deltaT);
+        sun.coordX = tmpX;
+        sun.coordZ = tmpZ;
+
         // render game objects
-        renderObject(player, playerShader, model, view, projection);
-        renderObject(enemy, enemyShader, model, view, projection);
-        renderObject(box, boxShader, model, view, projection);
-        renderObject(sun, sunShader, model, view, projection);
-        renderObject(floor, boxShader, model, view, projection);
+        renderObject(player, playerShader, view, projection);
+        renderObject(enemy, enemyShader, view, projection);
+        renderObject(box, boxShader, view, projection);
+        renderObject(floor, boxShader, view, projection);
+        renderObject(sun, sunShader, view, projection);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -156,12 +161,18 @@ void Game::run() {
 }
 
 
-void Game::renderObject(GameObject object, Shader shader, glm::mat4 model, glm::mat4 view, glm::mat4 projection) {
+void Game::renderObject(GameObject object, Shader shader, glm::mat4 view, glm::mat4 projection) {
     shader.use();
+    // model transformations represented by 4 x 4 matrix
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, object.getPos());
+    model = glm::scale(model, object.scale);
     shader.setMat4("model", model);
     shader.setMat4("view", view);
     shader.setMat4("projection", projection);
     shader.setVec3("lColor", sun.color);
+    glm::vec3 lpos = sun.getPos();
+    shader.setVec3("lPos", lpos);
     glBindVertexArray(object.VAO);
     glDrawArrays(GL_TRIANGLES, 0, object.modelSize);
 }
@@ -179,14 +190,17 @@ void Game::generateVertexObjects(GameObject* object) {
     object->VAO = VAO;
     glBufferData(GL_ARRAY_BUFFER, object->modelSize * sizeof(Vertex), object->modelVerts, GL_DYNAMIC_DRAW);
     // describe VERTEX POSITIONS
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
     // describe VERTEX COLORS
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
     // describe TEXTURE COORDINATES
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
+    // describe NORMAL VECTORS
+    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(8 * sizeof(float)));
+    glEnableVertexAttribArray(3);
     // unbind VAO and VBO
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -200,19 +214,15 @@ int Game::processInput(GLFWwindow* window) {
 
     // position
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        player.coordY += deltaT * player.getSpeed();
         camera.cameraPos += deltaT * player.getSpeed() * camera.cameraFront;
     }
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        player.coordY -= deltaT * player.getSpeed();
         camera.cameraPos -= deltaT * player.getSpeed() * camera.cameraFront;
     }
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        player.coordX -= deltaT * player.getSpeed();
         camera.cameraPos -= deltaT * player.getSpeed() * camera.cameraRight;
     }
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        player.coordX += deltaT * player.getSpeed();
         camera.cameraPos += deltaT * player.getSpeed() * camera.cameraRight;
     }
 

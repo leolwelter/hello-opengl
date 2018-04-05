@@ -19,6 +19,7 @@ struct Vertex {
     float x, y, z;
     float red, green, blue;
     float texX, texY;
+    float normX, normY, normZ;
 };
 
 
@@ -34,12 +35,14 @@ public:
     unsigned int VAO;
     Vertex* modelVerts; //model vertex data
     int modelSize;
+    glm::vec3 getPos();
 
     glm::mat4 reset();
 
     float coordX;
     float coordY;
     float coordZ;
+    glm::vec3 scale;
 };
 
 

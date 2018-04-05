@@ -11,10 +11,11 @@ GameObject::GameObject()
 }
 
 GameObject::GameObject(float x, float y, float z, int mSize)
-        : coordX(x), coordY(y), modelSize(mSize)
+        : coordX(x), coordY(y), coordZ(z), modelSize(mSize)
 {
     std::cout << "NEW OBJECT: [" << x << ", " << y << ", " << z << "]" << std::endl;
     modelVerts = (Vertex*)malloc(mSize * sizeof(Vertex));
+    scale = glm::vec3(1.0f, 1.0f, 1.0f);
 }
 
 GameObject::GameObject(Vertex* vertexData, int mSize) {
@@ -29,4 +30,9 @@ glm::mat4 GameObject::reset() {
     glm::mat4 trans(1.0f);
     trans = glm::translate(trans, glm::vec3(coordX, coordY, coordZ));
     return trans;
+}
+
+glm::vec3 GameObject::getPos() {
+    glm::vec3 lpos = glm::vec3(coordX, coordY, coordZ);
+    return lpos;
 }
