@@ -51,14 +51,17 @@ public:
     GLFWwindow* window;
 
 private:
+    // constructors
     Game(void){}; // there can only be one
 
+    // attributes
     Creature player;
     Creature enemy;
     Obstacle box;
     Obstacle floor;
     Camera camera;
     LightSource sun;
+    LightSource moon;
 
     Shader playerShader;
     Shader enemyShader;
@@ -67,7 +70,7 @@ private:
     Shader sunShader;
 
     std::vector<Bullet> bullets;
-    std::vector<GameObject> objects;
+//    std::vector<GameObject> objects;
 
     unsigned int boxTex, shipTex, faceTex;
     double lastPlayerShotTime;
@@ -76,15 +79,15 @@ private:
     float lastFrameT;
     float lastMouseX;
     float lastMouseY;
+    bool firstMouseInput;
 
-    void renderObject(GameObject object, Shader shader, glm::mat4 view, glm::mat4 projection);    int processInput(GLFWwindow *window);
+    // methods
+    void renderObject(GameObject object, glm::mat4 view, glm::mat4 projection);    int processInput(GLFWwindow *window);
     void generateVertexObjects(GameObject* object);
     static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
     void spawnBullet(int side);
     bool playerCooldown();
     bool enemyCooldown();
-
-    bool firstMouseInput;
 };
 
 

@@ -8,6 +8,8 @@
 
 #include "GameObject.h"
 
+#define DAY_IN_SECONDS 10
+
 static const Vertex defaultObstacleModel [] = {
         {-1.0f, -1.0f, -1.0f, .0f, .0f, .0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f},
         { 1.0f, -1.0f, -1.0f, .0f, .0f, .0f, 1.0f, 0.0f, 0.0f, 0.0f, -1.0f},
@@ -56,20 +58,29 @@ class LightSource: public GameObject{
 public:
     // constructors
     LightSource() {}
-    LightSource(float x, float y, float z)
+    LightSource(float x, float y, float z, glm::vec3 vColor)
         :GameObject(x, y, z, 36){
-        color = glm::vec3(.9f, .9f, .4f);
         for (int i = 0; i < modelSize; i++) {
             modelVerts[i] = defaultObstacleModel[i];
-            modelVerts[i].red = color.r;
-            modelVerts[i].green = color.g;
-            modelVerts[i].blue = color.b;
+            modelVerts[i].red = vColor.r;
+            modelVerts[i].green = vColor.g;
+            modelVerts[i].blue = vColor.b;
         }
         coordX = x;
         coordY = y;
         coordZ = z;
+        color = vColor;
     }
 
+    // methods
+    void orbit(float deltaT) {
+        float tmpX = coordX * cos(deltaT / DAY_IN_SECONDS) - coordY * sin(deltaT / DAY_IN_SECONDS);
+        float tmpY = coordY * cos(deltaT / DAY_IN_SECONDS) + coordX * sin(deltaT / DAY_IN_SECONDS);
+        coordX = tmpX;
+        coordY = tmpY;
+    }
+
+    // attributes
     glm::vec3 color;
 
 

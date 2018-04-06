@@ -10,6 +10,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include "Shader.h"
 
 enum DIRECTION {
     UP, LEFT, DOWN, RIGHT
@@ -30,19 +31,20 @@ public:
     GameObject(float x, float y, float z, int mSize);
     GameObject(Vertex* vertexData, int mSize);
 
-    // graphic info
+    // attributes
     unsigned int VBO;
     unsigned int VAO;
     Vertex* modelVerts; //model vertex data
     int modelSize;
-    glm::vec3 getPos();
-
-    glm::mat4 reset();
-
     float coordX;
     float coordY;
     float coordZ;
     glm::vec3 scale;
+    Shader shader;
+
+    // methods
+    glm::vec3 getPos();
+    glm::mat4 reset();
 };
 
 

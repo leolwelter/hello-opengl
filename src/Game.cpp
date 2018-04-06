@@ -34,24 +34,28 @@ Game::Game(bool run)
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glEnable(GL_DEPTH_TEST);
 
-    /* ---- SHADER SOURCE AND COMPILATION ---- */
-    playerShader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/FragmentShader.glsl");
-    enemyShader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/FragmentShader.glsl");
-    boxShader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/BoxShader.glsl");
-    sunShader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/LightSourceFragmentShader.glsl");
-
     /* ---- game objects ----*/
     player = Creature(0.5f, -0.2f, 0.0f);
+    player.shader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/FragmentShader.glsl");
     enemy =  Creature(1.0f, -0.2f, 0.0f);
+    enemy.shader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/FragmentShader.glsl");
     box = Obstacle(0.0f, 0.0f, 0.0f);
-    sun = LightSource(10.0f, 10.0f, 0.0f);
+    box.shader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/FragmentShader.glsl");
+    sun = LightSource(10.0f, 10.0f, 0.0f, glm::vec3(0.9f, 0.8f, 0.1f));
+    sun.shader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/LightSourceFragmentShader.glsl");
+    sun.scale = glm::vec3(0.6f, 0.6f, 0.6f);
+    moon = LightSource(-10.0f, -10.0f, 0.0f, glm::vec3(0.2f, 0.2f, 0.8f));
+    moon.scale = glm::vec3(0.2f, 0.2f, 0.2f);
+    moon.shader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/LightSourceFragmentShader.glsl");
     floor = Obstacle(0.0f, -0.2f, 0.0f, 15.0f, 0.1f, 15.0f);
+    floor.shader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/FragmentShader.glsl");
 
     /* ---- vertex buffer data and vertex attribute config ---- */
     generateVertexObjects(&player);
     generateVertexObjects(&enemy);
     generateVertexObjects(&box);
     generateVertexObjects(&sun);
+    generateVertexObjects(&moon);
     generateVertexObjects(&floor);
 
     /* ---- texture loading ---- */
@@ -128,7 +132,6 @@ void Game::run() {
         // user input and calculations
         processInput(window);
 
-
         // view matrix, used for world coordinate space (glm::lookAt)
         glm::mat4 view = camera.getView();
 
@@ -136,18 +139,17 @@ void Game::run() {
         glm::mat4 projection(1.0f);
         projection = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / SCR_HEIGHT, 0.1f, 100.0f);
 
-        // update sun position
-        float tmpX = sun.coordX * cos(deltaT) - sun.coordZ * sin(deltaT);
-        float tmpZ = sun.coordZ * cos(deltaT) + sun.coordX * sin(deltaT);
-        sun.coordX = tmpX;
-        sun.coordZ = tmpZ;
+        // update celestial object positions
+        sun.orbit(deltaT);
+        moon.orbit(deltaT);
 
         // render game objects
-        renderObject(player, playerShader, view, projection);
-        renderObject(enemy, enemyShader, view, projection);
-        renderObject(box, boxShader, view, projection);
-        renderObject(floor, boxShader, view, projection);
-        renderObject(sun, sunShader, view, projection);
+        renderObject(player, view, projection);
+        renderObject(enemy, view, projection);
+        renderObject(box, view, projection);
+        renderObject(floor, view, projection);
+        renderObject(sun, view, projection);
+        renderObject(moon, view, projection);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -161,18 +163,27 @@ void Game::run() {
 }
 
 
-void Game::renderObject(GameObject object, Shader shader, glm::mat4 view, glm::mat4 projection) {
-    shader.use();
-    // model transformations represented by 4 x 4 matrix
+void Game::renderObject(GameObject object, glm::mat4 view, glm::mat4 projection) {
+    object.shader.use();
+    // view transformations
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, object.getPos());
     model = glm::scale(model, object.scale);
-    shader.setMat4("model", model);
-    shader.setMat4("view", view);
-    shader.setMat4("projection", projection);
-    shader.setVec3("lColor", sun.color);
+    object.shader.setMat4("model", model);
+    object.shader.setMat4("view", view);
+    object.shader.setMat4("projection", projection);
+
+    // lighting logic
     glm::vec3 lpos = sun.getPos();
-    shader.setVec3("lPos", lpos);
+    glm::vec3 mpos = moon.getPos();
+    object.shader.setVec3("lPos", lpos);
+    object.shader.setVec3("mPos", mpos);
+    object.shader.setVec3("lColor", sun.color);
+    object.shader.setVec3("mColor", moon.color);
+    glm::vec3 viewPos = camera.cameraPos;
+    object.shader.setVec3("playerPos", viewPos);
+
+    // draw
     glBindVertexArray(object.VAO);
     glDrawArrays(GL_TRIANGLES, 0, object.modelSize);
 }
