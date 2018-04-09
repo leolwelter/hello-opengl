@@ -10,6 +10,11 @@
 
 #define DAY_IN_SECONDS 10
 
+struct ShaderLightStruct {
+    glm::vec3 position;
+    glm::vec3 color;
+};
+
 static const Vertex defaultObstacleModel [] = {
         {-1.0f, -1.0f, -1.0f, .0f, .0f, .0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f},
         { 1.0f, -1.0f, -1.0f, .0f, .0f, .0f, 1.0f, 0.0f, 0.0f, 0.0f, -1.0f},
@@ -79,6 +84,13 @@ public:
         float tmpY = coordY * cos(deltaT / DAY_IN_SECONDS) + coordX * sin(deltaT / DAY_IN_SECONDS);
         coordX = tmpX;
         coordY = tmpY;
+    }
+
+    ShaderLightStruct getShaderLightStruct() {
+        ShaderLightStruct tmp;
+        tmp.position = getPos();
+        tmp.color = color;
+        return tmp;
     }
 
     // attributes

@@ -36,33 +36,36 @@ Game::Game(bool run)
 
     /* ---- game objects ----*/
     player = Creature(0.5f, -0.2f, 0.0f);
-    player.shader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/FragmentShader.glsl");
-
     enemy =  Creature(1.0f, -0.2f, 0.0f);
-    enemy.shader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/FragmentShader.glsl");
-
-    box = Obstacle(0.0f, 0.0f, 0.0f);
-    box.shader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/FragmentShader.glsl");
+    creatures.push_back(player);
+    creatures.push_back(enemy);
 
     sun = LightSource(10.0f, 10.0f, 0.0f, glm::vec3(0.9f, 0.8f, 0.1f));
-    sun.shader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/LightSourceFragmentShader.glsl");
     sun.scale = glm::vec3(0.6f, 0.6f, 0.6f);
-
     moon = LightSource(-10.0f, -10.0f, 0.0f, glm::vec3(0.2f, 0.2f, 0.8f));
     moon.scale = glm::vec3(0.2f, 0.2f, 0.2f);
-    moon.shader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/LightSourceFragmentShader.glsl");
+    lightSources.push_back(sun);
+    lightSources.push_back(moon);
 
+    box = Obstacle(0.0f, 0.0f, 0.0f);
     floor = Obstacle(0.0f, -0.2f, 0.0f, 15.0f, 0.1f, 15.0f);
-    floor.shader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/FragmentShader.glsl");
-
     Obstacle wallEast =  Obstacle(3.0f,  2.5f, 0.0f, 0.1f, 15.0f, 15.0f);
     Obstacle wallWest =  Obstacle(-3.0f, 2.5f, 0.0f, 0.1f, 15.0f, 15.0f);
     Obstacle wallSouth = Obstacle(0.0f,  2.5f, -3.0f, 15.0f, 15.0f, 0.1f);
     Obstacle wallNorth = Obstacle(0.0f,  2.5f, 3.0f, 15.0f, 15.0f, 0.1f);
+    obstacles.push_back(box);
+    obstacles.push_back(floor);
     obstacles.push_back(wallNorth);
     obstacles.push_back(wallSouth);
     obstacles.push_back(wallEast);
     obstacles.push_back(wallWest);
+
+    for (auto &obj: creatures) {
+        obj.shader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/FragmentShader.glsl");
+    }
+    for (auto &obj: lightSources) {
+        obj.shader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/LightSourceFragmentShader.glsl");
+    }
     for (auto &obj: obstacles) {
         obj.shader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/FragmentShader.glsl");
     }
@@ -117,7 +120,7 @@ Game::Game(bool run)
 
     lastMouseX = SCR_WIDTH / 2;
     lastMouseY = SCR_HEIGHT / 2;
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+//    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     firstMouseInput = true;
 
 }
@@ -148,17 +151,15 @@ void Game::run() {
         glm::mat4 projection(1.0f);
         projection = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / SCR_HEIGHT, 0.1f, 100.0f);
 
-        // update celestial object positions
-        sun.orbit(deltaT);
-        moon.orbit(deltaT);
 
-        // render game objects
-        renderObject(player, view, projection);
-        renderObject(enemy, view, projection);
-        renderObject(box, view, projection);
-        renderObject(floor, view, projection);
-        renderObject(sun, view, projection);
-        renderObject(moon, view, projection);
+        for (auto &obj: creatures) {
+            renderObject(obj, view, projection);
+        }
+
+        for (auto &obj: lightSources) {
+            obj.orbit(deltaT);
+            renderObject(obj, view, projection);
+        }
 
         for (auto &obj: obstacles) {
             renderObject(obj, view, projection);
@@ -186,13 +187,12 @@ void Game::renderObject(GameObject object, glm::mat4 view, glm::mat4 projection)
     object.shader.setMat4("view", view);
     object.shader.setMat4("projection", projection);
 
-    // lighting logic
-    glm::vec3 lpos = sun.getPos();
-    glm::vec3 mpos = moon.getPos();
-    object.shader.setVec3("lPos", lpos);
-    object.shader.setVec3("mPos", mpos);
-    object.shader.setVec3("lColor", sun.color);
-    object.shader.setVec3("mColor", moon.color);
+    for(int i = 0; i < lightSources.capacity(); i++) {
+        glm::vec3 lPos = lightSources[i].getPos();
+        object.shader.setVec3("pointLights[" + std::to_string(i) + "].position", lPos);
+        object.shader.setVec3("pointLights[" + std::to_string(i) + "].color", lightSources[i].color);
+    }
+
     glm::vec3 viewPos = camera.cameraPos;
     object.shader.setVec3("playerPos", viewPos);
 
