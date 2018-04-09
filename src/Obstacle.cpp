@@ -64,6 +64,7 @@ Obstacle::Obstacle(float x, float y, float z)
     coordY = y;
     coordZ = z;
     scale = glm::vec3(1.0f, 1.0f, 1.0f);
+    material = {64.0f, glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f)};
     generateVertexObjects();
 }
 
@@ -78,5 +79,6 @@ Obstacle::Obstacle(float x, float y, float z, float scaleX, float scaleY, float 
     coordY = y;
     coordZ = z;
     scale = glm::vec3(scaleX, scaleY, scaleZ);
+    material = {64.0f, glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f)};
     generateVertexObjects();
 }

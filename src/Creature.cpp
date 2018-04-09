@@ -43,43 +43,6 @@ Creature::Creature(float x, float y, float z)
         modelVerts[i] = defaultPlayerModel[i];
     }
     scale = glm::vec3(0.2f, 0.2f, 0.2f);
+    material = {64.0f, glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f)};
     generateVertexObjects();
-}
-
-
-
-glm::mat4 Creature::move(float dx, float dy, float dz) {
-    coordX += dx;
-    coordY += dy;
-    coordZ += dz;
-    glm::mat4 trans(1.0f);
-    trans = glm::translate(trans, glm::vec3(dx, dy, dz));
-    return trans;
-}
-
-
-glm::mat4 Creature::move(int direction) {
-    glm::mat4 trans(1.0f);
-    switch (direction) {
-        case UP:
-            trans = glm::translate(trans, glm::vec3(coordX, 0.01f + coordY, coordZ));
-            coordY += 0.01f;
-            break;
-        case DOWN:
-            trans = glm::translate(trans, glm::vec3(coordX, -0.01f + coordY, coordZ));
-            coordY -= 0.01f;
-            break;
-        case LEFT:
-            trans = glm::translate(trans, glm::vec3(-0.01f + coordX, coordY, coordZ));
-            coordX -= 0.01f;
-            break;
-        case RIGHT:
-            trans = glm::translate(trans, glm::vec3(0.01f + coordX, coordY, coordZ));
-            coordX += 0.01f;
-            break;
-        default:
-            std::cout << "INVALID MOVEMENT" << std::endl;
-            break;
-    }
-    return trans;
 }

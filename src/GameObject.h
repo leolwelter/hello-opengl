@@ -16,12 +16,20 @@ enum DIRECTION {
     UP, LEFT, DOWN, RIGHT
 };
 
+struct Material {
+    float shininess;
+    glm::vec3 ambient;
+    glm::vec3 diffuse;
+    glm::vec3 specular;
+};
+
 struct Vertex {
     float x, y, z;
     float red, green, blue;
     float texX, texY;
     float normX, normY, normZ;
 };
+
 
 
 class GameObject {
@@ -40,6 +48,7 @@ public:
     float coordZ;
     glm::vec3 scale;
     Shader shader;
+    Material material;
 
     // methods
     void generateVertexObjects(void);

@@ -35,24 +35,37 @@ Game::Game(bool run)
     glEnable(GL_DEPTH_TEST);
 
     /* ---- game objects ----*/
+    // creatures
     player = Creature(0.5f, -0.2f, 0.0f);
     enemy =  Creature(1.0f, -0.2f, 0.0f);
     creatures.push_back(player);
     creatures.push_back(enemy);
 
-    sun = LightSource(10.0f, 10.0f, 0.0f, glm::vec3(0.9f, 0.8f, 0.1f));
-    sun.scale = glm::vec3(0.6f, 0.6f, 0.6f);
-    moon = LightSource(-10.0f, -10.0f, 0.0f, glm::vec3(0.2f, 0.2f, 0.8f));
-    moon.scale = glm::vec3(0.2f, 0.2f, 0.2f);
+    // light sources
+    glm::vec3 stdIntensities(0.1f, 0.4f, 1.0f);
+    sun = LightSource(10.0f, 10.0f, 1.0f, glm::vec3(0.8f, 0.8f, 0.1f), stdIntensities, glm::vec3(0.6f, 0.6f, 0.6f), 'Z', 4.0f);
+    moon = LightSource(-10.0f, -10.0f, -1.0f, glm::vec3(0.2f, 0.2f, 1.0f), stdIntensities, glm::vec3(0.2f, 0.2f, 0.2f), 'Z', 15.0f);
+    LightSource uranium = LightSource(-1.0f, -10.0f, 10.0f, glm::vec3(0.3f, 0.7f, 0.1f), stdIntensities, glm::vec3(0.3f, 0.3f, 0.3f), 'X', 12.0f);
+    LightSource ruby= LightSource(1.0f, 0.0f, -10.0f, glm::vec3(1.0f, .0f, 0.1f), stdIntensities, glm::vec3(1.0f, 1.0f, 1.0f), 'Y', 2.0f);
+
+    lightSources.push_back(ruby);
+    lightSources.push_back(uranium);
     lightSources.push_back(sun);
     lightSources.push_back(moon);
 
+    // obstacles
     box = Obstacle(0.0f, 0.0f, 0.0f);
     floor = Obstacle(0.0f, -0.2f, 0.0f, 15.0f, 0.1f, 15.0f);
+    Obstacle b1 = Obstacle(1.0f, 0.2f, 0.3f, 2.0f, 2.0f, 1.0f);
+    Obstacle b2 = Obstacle(1.5f, 0.1f, 1.3f, 1.0f, 2.0f, 2.0f);
+    Obstacle b3 = Obstacle(2.0f, 0.4f, 0.3f, 2.0f, 1.0f, 2.0f);
     Obstacle wallEast =  Obstacle(3.0f,  2.5f, 0.0f, 0.1f, 15.0f, 15.0f);
     Obstacle wallWest =  Obstacle(-3.0f, 2.5f, 0.0f, 0.1f, 15.0f, 15.0f);
     Obstacle wallSouth = Obstacle(0.0f,  2.5f, -3.0f, 15.0f, 15.0f, 0.1f);
     Obstacle wallNorth = Obstacle(0.0f,  2.5f, 3.0f, 15.0f, 15.0f, 0.1f);
+    obstacles.push_back(b1);
+    obstacles.push_back(b2);
+    obstacles.push_back(b3);
     obstacles.push_back(box);
     obstacles.push_back(floor);
     obstacles.push_back(wallNorth);
@@ -120,9 +133,8 @@ Game::Game(bool run)
 
     lastMouseX = SCR_WIDTH / 2;
     lastMouseY = SCR_HEIGHT / 2;
-//    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     firstMouseInput = true;
-
 }
 
 void Game::run() {
@@ -186,11 +198,17 @@ void Game::renderObject(GameObject object, glm::mat4 view, glm::mat4 projection)
     object.shader.setMat4("model", model);
     object.shader.setMat4("view", view);
     object.shader.setMat4("projection", projection);
+    object.shader.setVec3("material.ambient", object.material.ambient);
+    object.shader.setVec3("material.diffuse", object.material.diffuse);
+    object.shader.setVec3("material.specular", object.material.specular);
+    object.shader.setFloat("material.shininess", object.material.shininess);
 
     for(int i = 0; i < lightSources.capacity(); i++) {
         glm::vec3 lPos = lightSources[i].getPos();
         object.shader.setVec3("pointLights[" + std::to_string(i) + "].position", lPos);
-        object.shader.setVec3("pointLights[" + std::to_string(i) + "].color", lightSources[i].color);
+        object.shader.setVec3("pointLights[" + std::to_string(i) + "].ambient", lightSources[i].lIntensity.ambient);
+        object.shader.setVec3("pointLights[" + std::to_string(i) + "].diffuse", lightSources[i].lIntensity.diffuse);
+        object.shader.setVec3("pointLights[" + std::to_string(i) + "].specular", lightSources[i].lIntensity.specular);
     }
 
     glm::vec3 viewPos = camera.cameraPos;
