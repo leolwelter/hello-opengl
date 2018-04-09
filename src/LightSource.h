@@ -70,6 +70,7 @@ public:
         coordY = y;
         coordZ = z;
         color = vColor;
+        generateVertexObjects();
     }
 
     // methods

@@ -70,7 +70,7 @@ private:
     Shader sunShader;
 
     std::vector<Bullet> bullets;
-//    std::vector<GameObject> objects;
+    std::vector<Obstacle> obstacles;
 
     unsigned int boxTex, shipTex, faceTex;
     double lastPlayerShotTime;
@@ -85,7 +85,6 @@ private:
     void renderObject(GameObject object, glm::mat4 view, glm::mat4 projection);    int processInput(GLFWwindow *window);
     void generateVertexObjects(GameObject* object);
     static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-    void spawnBullet(int side);
     bool playerCooldown();
     bool enemyCooldown();
 };

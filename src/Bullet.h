@@ -16,7 +16,6 @@ enum SIDE {
 
 class Bullet: public GameObject {
 public:
-    Bullet(Vertex* vData, int side, int vHor);
 
     // game actions
     void fly();

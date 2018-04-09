@@ -5,6 +5,7 @@
 #include "Obstacle.h"
 
 static const Vertex defaultObstacleModel [] = {
+        // coordinates        // colors      // textures // normal vectors
         {-0.2f, -0.2f, -0.2f, .0f, .0f, .0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f},
         { 0.2f, -0.2f, -0.2f, .0f, .0f, .0f, 1.0f, 0.0f, 0.0f, 0.0f, -1.0f},
         { 0.2f,  0.2f, -0.2f, .0f, .0f, .0f, 1.0f, 1.0f, 0.0f, 0.0f, -1.0f},
@@ -63,7 +64,7 @@ Obstacle::Obstacle(float x, float y, float z)
     coordY = y;
     coordZ = z;
     scale = glm::vec3(1.0f, 1.0f, 1.0f);
-
+    generateVertexObjects();
 }
 
 
@@ -77,4 +78,5 @@ Obstacle::Obstacle(float x, float y, float z, float scaleX, float scaleY, float 
     coordY = y;
     coordZ = z;
     scale = glm::vec3(scaleX, scaleY, scaleZ);
+    generateVertexObjects();
 }

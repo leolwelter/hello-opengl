@@ -29,7 +29,6 @@ public:
     // constructors
     GameObject();
     GameObject(float x, float y, float z, int mSize);
-    GameObject(Vertex* vertexData, int mSize);
 
     // attributes
     unsigned int VBO;
@@ -43,8 +42,8 @@ public:
     Shader shader;
 
     // methods
+    void generateVertexObjects(void);
     glm::vec3 getPos();
-    glm::mat4 reset();
 };
 
 

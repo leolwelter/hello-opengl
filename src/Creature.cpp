@@ -43,6 +43,7 @@ Creature::Creature(float x, float y, float z)
         modelVerts[i] = defaultPlayerModel[i];
     }
     scale = glm::vec3(0.2f, 0.2f, 0.2f);
+    generateVertexObjects();
 }
 
 
