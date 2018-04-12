@@ -67,6 +67,7 @@ private:
     std::vector<Obstacle> obstacles;
     std::vector<LightSource> pointLights;
     std::vector<LightSource> directionalLights;
+    std::vector<LightSource> spotLights;
 
     unsigned int boxTex, shipTex, faceTex;
     float deltaT;

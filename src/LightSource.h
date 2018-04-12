@@ -90,7 +90,7 @@ public:
         scale = pscale;
         color = vColor;
         lIntensity = {intensities.x * vColor, intensities.y * vColor, intensities.z * vColor};
-        lDirection = glm::vec3(-1.0f, -1.0f, -1.0f);
+        lDirection = glm::vec3(0.0f, -1.0f, 0.0f);
         attenConstant = STD_CONST_ATTEN;
         attenLinear = STD_LIN_ATTEN;
         attenQuad = STD_QUAD_ATTEN;
@@ -115,7 +115,7 @@ public:
         speed = 0;
         color = vColor;
         lIntensity = {intensities.x * vColor, intensities.y * vColor, intensities.z * vColor};
-        lDirection = glm::vec3(-1.0f, -1.0f, -1.0f);
+        lDirection = glm::vec3(0.0f, -1.0f, 0.0f);
         attenConstant = STD_CONST_ATTEN;
         attenLinear = STD_LIN_ATTEN;
         attenQuad = STD_QUAD_ATTEN;
@@ -163,7 +163,8 @@ public:
     // attributes
     glm::vec3 color;
     LightIntensity lIntensity;
-    glm::vec3 lDirection;
+    glm::vec3 lDirection;   // for directional and spot lights
+    float cutoffAngle;      // for spot lights
     char rotAxis;
     float speed;
     float attenConstant;

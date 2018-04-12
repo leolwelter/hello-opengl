@@ -43,11 +43,22 @@ Game::Game(bool run)
 
     // light sources
     glm::vec3 stdIntensities(0.1f, 0.6f, 1.0f);
+    LightSource ruby = LightSource(2.0f, 2.0f, 0.0f, glm::vec3(1.0f, 0.3f, 0.3f), stdIntensities, glm::vec3(0.1f, 0.1f, 0.1f), 'Y', 24.0f);
+    pointLights.push_back(ruby);
+    LightSource emerald= LightSource(0.0f, 2.0f, 0.0f, glm::vec3(0.3f, 1.0f, 0.3f), stdIntensities, glm::vec3(0.1f, 0.1f, 0.1f), 'X', 24.0f);
+    pointLights.push_back(emerald);
+    LightSource sapphire = LightSource(0.0f, -2.0f, 0.0f, glm::vec3(0.3f, 0.3f, 1.0f), stdIntensities, glm::vec3(0.1f, 0.1f, 0.1f), 'Z', 24.0f);
+    pointLights.push_back(sapphire);
+
     LightSource sun = LightSource(15.0f, 50.0f, 15.0f, glm::vec3(0.9f, 0.8f, 0.1f), glm::vec3(0.0f, 1.0f, 1.0f), glm::vec3(2.0f, 2.0f, 2.0f));
     sun.lDirection = glm::vec3(-0.2f, -1.0f, -0.2f);
-    LightSource lamp = LightSource(2.0f, 2.0f, 0.0f, glm::vec3(1.0f, 1.0f, 1.0f), stdIntensities, glm::vec3(0.1f, 0.1f, 0.1f), 'Y', 4.0f);
-    pointLights.push_back(lamp);
     directionalLights.push_back(sun);
+
+    LightSource flashlight = LightSource(0.0f, 5.0f, 0.0f, glm::vec3(1.0f, 1.0f, 1.0f), stdIntensities, glm::vec3(.1f, .1f, .1f));
+    flashlight.cutoffAngle = 30.0f;
+    flashlight.attenLinear = 0.015f;
+    flashlight.attenQuad = 0.051;
+    spotLights.push_back(flashlight);
 
     // obstacles
     Obstacle floor = Obstacle(0.0f, -0.2f, 0.0f, 15.0f, 0.1f, 15.0f);
@@ -79,6 +90,9 @@ Game::Game(bool run)
         obj.shader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/LightSourceFragmentShader.glsl");
     }
     for (auto &obj: directionalLights) {
+        obj.shader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/LightSourceFragmentShader.glsl");
+    }
+    for (auto &obj: spotLights) {
         obj.shader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/LightSourceFragmentShader.glsl");
     }
 
@@ -220,8 +234,21 @@ void Game::renderObject(GameObject object, glm::mat4 view, glm::mat4 projection)
         object.shader.setVec3("dirLights[" + std::to_string(i) + "].specular", directionalLights[i].lIntensity.specular);
     }
 
+
     glm::vec3 viewPos = camera.cameraPos;
     object.shader.setVec3("playerPos", viewPos);
+    glm::vec3 flashlightTarget = -camera.cameraTarget;
+    object.shader.setVec3("spotLights[" + std::to_string(0) + "].position", viewPos);
+    object.shader.setVec3("spotLights[" + std::to_string(0) + "].spotDir", flashlightTarget);
+    object.shader.setFloat("spotLights[" + std::to_string(0) + "].cutoffAngle", glm::cos(glm::radians(spotLights[0].cutoffAngle)));
+    object.shader.setVec3("spotLights[" + std::to_string(0) + "].diffuse", spotLights[0].lIntensity.diffuse);
+    object.shader.setVec3("spotLights[" + std::to_string(0) + "].specular", spotLights[0].lIntensity.specular);
+    object.shader.setFloat("spotLights[" + std::to_string(0) + "].constant", spotLights[0].attenConstant);
+    object.shader.setFloat("spotLights[" + std::to_string(0) + "].linear", spotLights[0].attenLinear);
+    object.shader.setFloat("spotLights[" + std::to_string(0) + "].quadratic", spotLights[0].attenQuad);
+
+
+
 
     // draw
     glBindVertexArray(object.VAO);
@@ -289,4 +316,5 @@ void Game::mouse_callback(GLFWwindow* window, double x, double y) {
     float faceZ = cos(glm::radians(camera.pitch)) * sin(glm::radians(camera.yaw));
     camera.cameraFront = glm::normalize(glm::vec3(faceX, faceY, faceZ));
     camera.cameraRight = glm::normalize(glm::cross(camera.cameraFront, camera.cameraUp));
+    camera.cameraTarget = glm::normalize(-camera.cameraFront);
 }
