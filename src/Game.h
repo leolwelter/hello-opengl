@@ -57,8 +57,6 @@ private:
     // attributes
     Creature player;
     Creature enemy;
-    Obstacle box;
-    Obstacle floor;
     Camera camera;
 
     Shader playerShader;
@@ -71,8 +69,6 @@ private:
     std::vector<LightSource> directionalLights;
 
     unsigned int boxTex, shipTex, faceTex;
-    double lastPlayerShotTime;
-    double lastEnemyShotTime;
     float deltaT;
     float lastFrameT;
     float lastMouseX;

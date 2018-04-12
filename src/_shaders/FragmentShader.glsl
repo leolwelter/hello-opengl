@@ -1,5 +1,6 @@
 #version 330 core
 # define NR_POINT_LIGHTS 1
+# define NR_DIR_LIGHTS 1
 
 struct Material {
     float shininess;
@@ -35,22 +36,27 @@ uniform sampler2D tex1;
 uniform sampler2D tex2;
 uniform vec3 playerPos;
 uniform PointLight pointLights[NR_POINT_LIGHTS];
+uniform DirectionalLight dirLights[NR_DIR_LIGHTS];
 uniform Material material;
 
-vec3 lightCalc(PointLight);
+vec3 pointLightCalc(PointLight);
+vec3 dirLightCalc(DirectionalLight);
 
 void main()
 {
     // for each light source, calculate contribution
     vec3 lightOutput = vec3(0.0f);
     for (int i = 0; i < NR_POINT_LIGHTS; i++) {
-        lightOutput += lightCalc(pointLights[i]);
+        lightOutput += pointLightCalc(pointLights[i]);
+    }
+    for (int j = 0; j < NR_DIR_LIGHTS; j++) {
+        lightOutput += dirLightCalc(dirLights[j]);
     }
 
     FragColor = vec4(lightOutput, 1.0f) * mix(texture(tex1, vTexCoord), texture(tex2, vec2(1.0 - vTexCoord.x, vTexCoord.y)), 0.2);
 }
 
-vec3 lightCalc(PointLight light) {
+vec3 pointLightCalc(PointLight light) {
     // direction vectors
     vec3 norm = normalize(vNormal);
     vec3 lDir = normalize(light.position - fragPos);
@@ -77,4 +83,22 @@ vec3 lightCalc(PointLight light) {
 
 
     return diffuseLight + specularLight + ambientLight;
+}
+
+vec3 dirLightCalc(DirectionalLight light) {
+    // direction vectors
+    vec3 norm = normalize(vNormal);
+    vec3 lDir = normalize(-light.direction);
+    vec3 playerDir = normalize(playerPos - fragPos);
+    vec3 lReflect = reflect(-lDir, norm);
+
+    // calculate diffuse component
+    float diffuseIntensity = max(dot(norm, lDir), 0.0f);
+    vec3 diffuseLight = diffuseIntensity * light.diffuse * material.diffuse;
+
+    // calculate specular component
+    float specularIntensity = pow(max(dot(playerDir, lReflect), 0.0f), material.shininess);
+    vec3 specularLight = specularIntensity * light.specular * material.specular;
+
+    return diffuseLight + specularLight;
 }

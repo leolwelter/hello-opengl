@@ -43,15 +43,18 @@ Game::Game(bool run)
 
     // light sources
     glm::vec3 stdIntensities(0.1f, 0.6f, 1.0f);
+    LightSource sun = LightSource(15.0f, 50.0f, 15.0f, glm::vec3(0.9f, 0.8f, 0.1f), glm::vec3(0.0f, 1.0f, 1.0f), glm::vec3(2.0f, 2.0f, 2.0f));
+    sun.lDirection = glm::vec3(-0.2f, -1.0f, -0.2f);
     LightSource lamp = LightSource(2.0f, 2.0f, 0.0f, glm::vec3(1.0f, 1.0f, 1.0f), stdIntensities, glm::vec3(0.1f, 0.1f, 0.1f), 'Y', 4.0f);
     pointLights.push_back(lamp);
+    directionalLights.push_back(sun);
 
     // obstacles
-    box = Obstacle(0.0f, 0.0f, 0.0f);
-    floor = Obstacle(0.0f, -0.2f, 0.0f, 15.0f, 0.1f, 15.0f);
+    Obstacle floor = Obstacle(0.0f, -0.2f, 0.0f, 15.0f, 0.1f, 15.0f);
     Obstacle b1 = Obstacle(1.0f, 0.2f, 0.3f, 2.0f, 2.0f, 1.0f);
     Obstacle b2 = Obstacle(1.5f, 0.1f, 1.3f, 1.0f, 2.0f, 2.0f);
     Obstacle b3 = Obstacle(2.0f, 0.4f, 0.3f, 2.0f, 1.0f, 2.0f);
+    Obstacle b4 = Obstacle(0.0f, 0.0f, 0.0f);
     Obstacle wallEast =  Obstacle(3.0f,  2.5f, 0.0f, 0.1f, 15.0f, 15.0f);
     Obstacle wallWest =  Obstacle(-3.0f, 2.5f, 0.0f, 0.1f, 15.0f, 15.0f);
     Obstacle wallSouth = Obstacle(0.0f,  2.5f, -3.0f, 15.0f, 15.0f, 0.1f);
@@ -59,7 +62,7 @@ Game::Game(bool run)
     obstacles.push_back(b1);
     obstacles.push_back(b2);
     obstacles.push_back(b3);
-    obstacles.push_back(box);
+    obstacles.push_back(b4);
     obstacles.push_back(floor);
     obstacles.push_back(wallNorth);
     obstacles.push_back(wallSouth);
@@ -69,11 +72,14 @@ Game::Game(bool run)
     for (auto &obj: creatures) {
         obj.shader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/FragmentShader.glsl");
     }
+    for (auto &obj: obstacles) {
+        obj.shader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/FragmentShader.glsl");
+    }
     for (auto &obj: pointLights) {
         obj.shader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/LightSourceFragmentShader.glsl");
     }
-    for (auto &obj: obstacles) {
-        obj.shader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/FragmentShader.glsl");
+    for (auto &obj: directionalLights) {
+        obj.shader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/LightSourceFragmentShader.glsl");
     }
 
     /* ---- texture loading ---- */
@@ -121,9 +127,6 @@ Game::Game(bool run)
     boxShader.setInt("tex2", 2);
 
     /* ---- game logic initialization ---- */
-    lastPlayerShotTime = glfwGetTime();
-    lastEnemyShotTime = glfwGetTime();
-
     lastMouseX = SCR_WIDTH / 2;
     lastMouseY = SCR_HEIGHT / 2;
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -166,6 +169,10 @@ void Game::run() {
             renderObject(obj, view, projection);
         }
 
+        for (auto &obj: directionalLights) {
+            renderObject(obj, view, projection);
+        }
+
         for (auto &obj: obstacles) {
             renderObject(obj, view, projection);
         }
@@ -205,7 +212,12 @@ void Game::renderObject(GameObject object, glm::mat4 view, glm::mat4 projection)
         object.shader.setFloat("pointLights[" + std::to_string(i) + "].constant", pointLights[i].attenConstant);
         object.shader.setFloat("pointLights[" + std::to_string(i) + "].linear", pointLights[i].attenLinear);
         object.shader.setFloat("pointLights[" + std::to_string(i) + "].quadratic", pointLights[i].attenQuad);
+    }
 
+    for(int i = 0; i < directionalLights.capacity(); i++) {
+        object.shader.setVec3("dirLights[" + std::to_string(i) + "].direction", directionalLights[i].lDirection);
+        object.shader.setVec3("dirLights[" + std::to_string(i) + "].diffuse", directionalLights[i].lIntensity.diffuse);
+        object.shader.setVec3("dirLights[" + std::to_string(i) + "].specular", directionalLights[i].lIntensity.specular);
     }
 
     glm::vec3 viewPos = camera.cameraPos;

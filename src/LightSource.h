@@ -72,49 +72,12 @@ class LightSource: public GameObject{
 public:
     // constructors
     LightSource() {}
-    LightSource(float x, float y, float z, glm::vec3 vColor)
-        :GameObject(x, y, z, 36){
-        for (int i = 0; i < modelSize; i++) {
-            modelVerts[i] = defaultObstacleModel[i];
-            modelVerts[i].red = vColor.r;
-            modelVerts[i].green = vColor.g;
-            modelVerts[i].blue = vColor.b;
-        }
-        coordX = x;
-        coordY = y;
-        coordZ = z;
-        color = vColor;
-        rotAxis = 'X';
-        speed = 1.0f;
-        lIntensity = {0.2f * vColor, 0.5f * vColor, 1.0f * vColor};
-        attenConstant = STD_CONST_ATTEN;
-        attenLinear = STD_LIN_ATTEN;
-        attenQuad = STD_QUAD_ATTEN;
-        generateVertexObjects();
-    }
 
-    LightSource(float x, float y, float z, glm::vec3 vColor, glm::vec3 pscale, char axis, float speed)
-            :GameObject(x, y, z, 36), rotAxis(axis), speed(speed) {
-        for (int i = 0; i < modelSize; i++) {
-            modelVerts[i] = defaultObstacleModel[i];
-            modelVerts[i].red = vColor.r;
-            modelVerts[i].green = vColor.g;
-            modelVerts[i].blue = vColor.b;
-        }
-        coordX = x;
-        coordY = y;
-        coordZ = z;
-        color = vColor;
-        scale = pscale;
-        lIntensity = {0.2f * vColor, 0.5f * vColor, 1.0f * vColor};
-        attenConstant = STD_CONST_ATTEN;
-        attenLinear = STD_LIN_ATTEN;
-        attenQuad = STD_QUAD_ATTEN;
-        generateVertexObjects();
-    }
 
     LightSource(float x, float y, float z, glm::vec3 vColor, glm::vec3 intensities, glm::vec3 pscale, char axis, float speed)
-            :GameObject(x, y, z, 36), rotAxis(axis), speed(speed) {
+            :GameObject(x, y, z, 36),
+             rotAxis(axis), speed(speed)
+    {
         for (int i = 0; i < modelSize; i++) {
             modelVerts[i] = defaultObstacleModel[i];
             modelVerts[i].red = vColor.r;
@@ -124,9 +87,35 @@ public:
         coordX = x;
         coordY = y;
         coordZ = z;
-        color = vColor;
         scale = pscale;
+        color = vColor;
         lIntensity = {intensities.x * vColor, intensities.y * vColor, intensities.z * vColor};
+        lDirection = glm::vec3(-1.0f, -1.0f, -1.0f);
+        attenConstant = STD_CONST_ATTEN;
+        attenLinear = STD_LIN_ATTEN;
+        attenQuad = STD_QUAD_ATTEN;
+        generateVertexObjects();
+    }
+
+    LightSource(float x, float y, float z, glm::vec3 vColor, glm::vec3 intensities, glm::vec3 pscale)
+            :GameObject(x, y, z, 36),
+             color(vColor)
+    {
+        for (int i = 0; i < modelSize; i++) {
+            modelVerts[i] = defaultObstacleModel[i];
+            modelVerts[i].red = vColor.r;
+            modelVerts[i].green = vColor.g;
+            modelVerts[i].blue = vColor.b;
+        }
+        coordX = x;
+        coordY = y;
+        coordZ = z;
+        scale = pscale;
+        rotAxis = 'N';
+        speed = 0;
+        color = vColor;
+        lIntensity = {intensities.x * vColor, intensities.y * vColor, intensities.z * vColor};
+        lDirection = glm::vec3(-1.0f, -1.0f, -1.0f);
         attenConstant = STD_CONST_ATTEN;
         attenLinear = STD_LIN_ATTEN;
         attenQuad = STD_QUAD_ATTEN;
@@ -174,6 +163,7 @@ public:
     // attributes
     glm::vec3 color;
     LightIntensity lIntensity;
+    glm::vec3 lDirection;
     char rotAxis;
     float speed;
     float attenConstant;
