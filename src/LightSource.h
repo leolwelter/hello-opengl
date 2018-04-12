@@ -9,6 +9,9 @@
 #include "GameObject.h"
 
 #define DAY_IN_SECONDS 24
+#define STD_CONST_ATTEN 1.0f
+#define STD_LIN_ATTEN 0.07f
+#define STD_QUAD_ATTEN 0.017f
 
 struct ShaderLightStruct {
     glm::vec3 position;
@@ -84,6 +87,9 @@ public:
         rotAxis = 'X';
         speed = 1.0f;
         lIntensity = {0.2f * vColor, 0.5f * vColor, 1.0f * vColor};
+        attenConstant = STD_CONST_ATTEN;
+        attenLinear = STD_LIN_ATTEN;
+        attenQuad = STD_QUAD_ATTEN;
         generateVertexObjects();
     }
 
@@ -101,6 +107,9 @@ public:
         color = vColor;
         scale = pscale;
         lIntensity = {0.2f * vColor, 0.5f * vColor, 1.0f * vColor};
+        attenConstant = STD_CONST_ATTEN;
+        attenLinear = STD_LIN_ATTEN;
+        attenQuad = STD_QUAD_ATTEN;
         generateVertexObjects();
     }
 
@@ -118,6 +127,9 @@ public:
         color = vColor;
         scale = pscale;
         lIntensity = {intensities.x * vColor, intensities.y * vColor, intensities.z * vColor};
+        attenConstant = STD_CONST_ATTEN;
+        attenLinear = STD_LIN_ATTEN;
+        attenQuad = STD_QUAD_ATTEN;
         generateVertexObjects();
     }
 
@@ -164,6 +176,9 @@ public:
     LightIntensity lIntensity;
     char rotAxis;
     float speed;
+    float attenConstant;
+    float attenLinear;
+    float attenQuad;
 };
 
 

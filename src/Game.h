@@ -60,20 +60,15 @@ private:
     Obstacle box;
     Obstacle floor;
     Camera camera;
-    LightSource sun;
-    LightSource moon;
 
     Shader playerShader;
     Shader enemyShader;
-    Shader bulletShader;
     Shader boxShader;
-    Shader sunShader;
 
-    std::vector<Bullet> bullets;
     std::vector<Creature> creatures;
     std::vector<Obstacle> obstacles;
-    std::vector<LightSource> lightSources;
-    std::vector<ShaderLightStruct> shaderLightData;
+    std::vector<LightSource> pointLights;
+    std::vector<LightSource> directionalLights;
 
     unsigned int boxTex, shipTex, faceTex;
     double lastPlayerShotTime;
@@ -87,8 +82,6 @@ private:
     // methods
     void renderObject(GameObject object, glm::mat4 view, glm::mat4 projection);    int processInput(GLFWwindow *window);
     static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-    bool playerCooldown();
-    bool enemyCooldown();
 };
 
 

@@ -42,16 +42,9 @@ Game::Game(bool run)
     creatures.push_back(enemy);
 
     // light sources
-    glm::vec3 stdIntensities(0.1f, 0.4f, 1.0f);
-    sun = LightSource(10.0f, 10.0f, 1.0f, glm::vec3(0.8f, 0.8f, 0.1f), stdIntensities, glm::vec3(0.6f, 0.6f, 0.6f), 'Z', 4.0f);
-    moon = LightSource(-10.0f, -10.0f, -1.0f, glm::vec3(0.2f, 0.2f, 1.0f), stdIntensities, glm::vec3(0.2f, 0.2f, 0.2f), 'Z', 15.0f);
-    LightSource uranium = LightSource(-1.0f, -10.0f, 10.0f, glm::vec3(0.3f, 0.7f, 0.1f), stdIntensities, glm::vec3(0.3f, 0.3f, 0.3f), 'X', 12.0f);
-    LightSource ruby= LightSource(1.0f, 0.0f, -10.0f, glm::vec3(1.0f, .0f, 0.1f), stdIntensities, glm::vec3(1.0f, 1.0f, 1.0f), 'Y', 2.0f);
-
-    lightSources.push_back(ruby);
-    lightSources.push_back(uranium);
-    lightSources.push_back(sun);
-    lightSources.push_back(moon);
+    glm::vec3 stdIntensities(0.1f, 0.6f, 1.0f);
+    LightSource lamp = LightSource(2.0f, 2.0f, 0.0f, glm::vec3(1.0f, 1.0f, 1.0f), stdIntensities, glm::vec3(0.1f, 0.1f, 0.1f), 'Y', 4.0f);
+    pointLights.push_back(lamp);
 
     // obstacles
     box = Obstacle(0.0f, 0.0f, 0.0f);
@@ -76,7 +69,7 @@ Game::Game(bool run)
     for (auto &obj: creatures) {
         obj.shader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/FragmentShader.glsl");
     }
-    for (auto &obj: lightSources) {
+    for (auto &obj: pointLights) {
         obj.shader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/LightSourceFragmentShader.glsl");
     }
     for (auto &obj: obstacles) {
@@ -168,7 +161,7 @@ void Game::run() {
             renderObject(obj, view, projection);
         }
 
-        for (auto &obj: lightSources) {
+        for (auto &obj: pointLights) {
             obj.orbit(deltaT);
             renderObject(obj, view, projection);
         }
@@ -203,12 +196,16 @@ void Game::renderObject(GameObject object, glm::mat4 view, glm::mat4 projection)
     object.shader.setVec3("material.specular", object.material.specular);
     object.shader.setFloat("material.shininess", object.material.shininess);
 
-    for(int i = 0; i < lightSources.capacity(); i++) {
-        glm::vec3 lPos = lightSources[i].getPos();
+    for(int i = 0; i < pointLights.capacity(); i++) {
+        glm::vec3 lPos = pointLights[i].getPos();
         object.shader.setVec3("pointLights[" + std::to_string(i) + "].position", lPos);
-        object.shader.setVec3("pointLights[" + std::to_string(i) + "].ambient", lightSources[i].lIntensity.ambient);
-        object.shader.setVec3("pointLights[" + std::to_string(i) + "].diffuse", lightSources[i].lIntensity.diffuse);
-        object.shader.setVec3("pointLights[" + std::to_string(i) + "].specular", lightSources[i].lIntensity.specular);
+        object.shader.setVec3("pointLights[" + std::to_string(i) + "].ambient", pointLights[i].lIntensity.ambient);
+        object.shader.setVec3("pointLights[" + std::to_string(i) + "].diffuse", pointLights[i].lIntensity.diffuse);
+        object.shader.setVec3("pointLights[" + std::to_string(i) + "].specular", pointLights[i].lIntensity.specular);
+        object.shader.setFloat("pointLights[" + std::to_string(i) + "].constant", pointLights[i].attenConstant);
+        object.shader.setFloat("pointLights[" + std::to_string(i) + "].linear", pointLights[i].attenLinear);
+        object.shader.setFloat("pointLights[" + std::to_string(i) + "].quadratic", pointLights[i].attenQuad);
+
     }
 
     glm::vec3 viewPos = camera.cameraPos;
@@ -242,15 +239,6 @@ int Game::processInput(GLFWwindow* window) {
     return -1;
 }
 
-bool Game::playerCooldown() {
-    double cooling = (glfwGetTime() - lastPlayerShotTime);
-    return (cooling > 1);
-}
-
-bool Game::enemyCooldown() {
-    double cooling = (glfwGetTime() - lastEnemyShotTime);
-    return (cooling > 1);
-}
 
 void Game::framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);

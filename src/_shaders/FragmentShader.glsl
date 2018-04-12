@@ -1,9 +1,15 @@
 #version 330 core
-# define NR_POINT_LIGHTS 4
+# define NR_POINT_LIGHTS 1
 
 struct Material {
     float shininess;
     vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+};
+
+struct DirectionalLight {
+    vec3 direction;
     vec3 diffuse;
     vec3 specular;
 };
@@ -13,6 +19,9 @@ struct PointLight {
     vec3 ambient;
     vec3 diffuse;
     vec3 specular;
+    float constant;
+    float linear;
+    float quadratic;
 };
 
 in vec3 vColor;
@@ -59,6 +68,12 @@ vec3 lightCalc(PointLight light) {
     float specularIntensity = pow(max(dot(playerDir, lReflect), 0.0f), material.shininess);
     vec3 specularLight = specularIntensity * light.specular * material.specular;
 
+    // attenuate all light based on distance
+    float distance = length(light.position - fragPos);
+    float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * distance * distance);
+    ambientLight *= attenuation;
+    diffuseLight *= attenuation;
+    specularLight *= attenuation;
 
 
     return diffuseLight + specularLight + ambientLight;
