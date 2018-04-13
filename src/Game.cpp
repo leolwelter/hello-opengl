@@ -54,8 +54,9 @@ Game::Game(bool run)
     sun.lDirection = glm::vec3(-0.2f, -1.0f, -0.2f);
     directionalLights.push_back(sun);
 
-    LightSource flashlight = LightSource(0.0f, 5.0f, 0.0f, glm::vec3(1.0f, 1.0f, 1.0f), stdIntensities, glm::vec3(.1f, .1f, .1f));
-    flashlight.cutoffAngle = 30.0f;
+    LightSource flashlight = LightSource(0.0f, 5.0f, 0.0f, glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.0f, 1.0f, 1.0f), glm::vec3(.1f, .1f, .1f));
+    flashlight.cutoffAngle = 12;
+    flashlight.cutoffOuter = 17;
     flashlight.attenLinear = 0.015f;
     flashlight.attenQuad = 0.051;
     spotLights.push_back(flashlight);
@@ -143,8 +144,9 @@ Game::Game(bool run)
     /* ---- game logic initialization ---- */
     lastMouseX = SCR_WIDTH / 2;
     lastMouseY = SCR_HEIGHT / 2;
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     firstMouseInput = true;
+    flashlightCooldown = 0.0f;
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
 
 void Game::run() {
@@ -155,13 +157,15 @@ void Game::run() {
     glBindTexture(GL_TEXTURE_2D, shipTex);
 
     while(!glfwWindowShouldClose(window)) {
-        glClearColor(.1f, .1f, .1f, 1.0f);
+        glClearColor(.0f, .0f, .0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // calculate time delta
         float frameT = glfwGetTime();
         deltaT = frameT - lastFrameT;
         lastFrameT = frameT;
+        if (flashlightCooldown > 0)
+            flashlightCooldown -= deltaT;
 
         // user input and calculations
         processInput(window);
@@ -171,7 +175,7 @@ void Game::run() {
 
         // projection matrix (perspective not ortho)
         glm::mat4 projection(1.0f);
-        projection = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / SCR_HEIGHT, 0.1f, 100.0f);
+        projection = glm::perspective(glm::radians(90.0f), (float)SCR_WIDTH / SCR_HEIGHT, 0.1f, 100.0f);
 
 
         for (auto &obj: creatures) {
@@ -241,6 +245,7 @@ void Game::renderObject(GameObject object, glm::mat4 view, glm::mat4 projection)
     object.shader.setVec3("spotLights[" + std::to_string(0) + "].position", viewPos);
     object.shader.setVec3("spotLights[" + std::to_string(0) + "].spotDir", flashlightTarget);
     object.shader.setFloat("spotLights[" + std::to_string(0) + "].cutoffAngle", glm::cos(glm::radians(spotLights[0].cutoffAngle)));
+    object.shader.setFloat("spotLights[" + std::to_string(0) + "].cutoffOuter", glm::cos(glm::radians(spotLights[0].cutoffOuter)));
     object.shader.setVec3("spotLights[" + std::to_string(0) + "].diffuse", spotLights[0].lIntensity.diffuse);
     object.shader.setVec3("spotLights[" + std::to_string(0) + "].specular", spotLights[0].lIntensity.specular);
     object.shader.setFloat("spotLights[" + std::to_string(0) + "].constant", spotLights[0].attenConstant);
@@ -273,6 +278,21 @@ int Game::processInput(GLFWwindow* window) {
     }
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
         camera.cameraPos += deltaT * player.getSpeed() * camera.cameraRight;
+    }
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+        if (flashlightCooldown <= 0) {
+            flashlightCooldown = 1.0f;
+            if (spotLights.at(0).lIntensity.diffuse == glm::vec3(0.0f)) {
+                spotLights.at(0).lIntensity.diffuse = glm::vec3(1.0f);
+                spotLights.at(0).lIntensity.ambient= glm::vec3(1.0f);
+                spotLights.at(0).lIntensity.specular = glm::vec3(1.0f);
+            }
+            else {
+                spotLights.at(0).lIntensity.diffuse = glm::vec3(0.0f);
+                spotLights.at(0).lIntensity.ambient= glm::vec3(0.0f);
+                spotLights.at(0).lIntensity.specular = glm::vec3(0.0f);
+            }
+        }
     }
 
     return -1;

@@ -165,6 +165,7 @@ public:
     LightIntensity lIntensity;
     glm::vec3 lDirection;   // for directional and spot lights
     float cutoffAngle;      // for spot lights
+    float cutoffOuter;      // for spot lights
     char rotAxis;
     float speed;
     float attenConstant;

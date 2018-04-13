@@ -31,6 +31,7 @@ struct SpotLight {
     vec3 position;
     vec3 spotDir;
     float cutoffAngle;
+    float cutoffOuter;
     vec3 diffuse;
     vec3 specular;
     float constant;
@@ -132,25 +133,26 @@ vec3 spotLightCalc(SpotLight light) {
     vec3 playerDir = normalize(playerPos - fragPos);
     vec3 lReflect = reflect(-lDir, norm);
 
+    // calculate diffuse component
+    float diffuseIntensity = max(dot(norm, lDir), 0.0f);
+    vec3 diffuseLight = diffuseIntensity * light.diffuse * material.diffuse;
+
+    // calculate specular component
+    float specularIntensity = pow(max(dot(playerDir, lReflect), 0.0f), material.shininess);
+    vec3 specularLight = specularIntensity * light.specular * material.specular;
+
+    // attenuate all light based on distance
+    float distance = length(light.position - fragPos);
+    float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * distance * distance);
+    diffuseLight *= attenuation;
+    specularLight *= attenuation;
+
+
+    // calculate interpolation of fragments on the spotlight border
     float theta = dot(lDir, spotDir);
-    vec3 diffuseLight = vec3(0.0f, 0.0f, 0.0f);
-    vec3 specularLight = vec3(0.0f, 0.0f, 0.0f);
-
-    if (theta > light.cutoffAngle) {
-        // calculate diffuse component
-        float diffuseIntensity = max(dot(norm, lDir), 0.0f);
-        diffuseLight = diffuseIntensity * light.diffuse * material.diffuse;
-
-        // calculate specular component
-        float specularIntensity = pow(max(dot(playerDir, lReflect), 0.0f), material.shininess);
-        specularLight = specularIntensity * light.specular * material.specular;
-
-        // attenuate all light based on distance
-        float distance = length(light.position - fragPos);
-        float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * distance * distance);
-        diffuseLight *= attenuation;
-        specularLight *= attenuation;
-    }
-
+    float epsilon = light.cutoffAngle - light.cutoffOuter;
+    float fade = clamp((theta - light.cutoffOuter) / epsilon, 0.0, 1.0);
+    diffuseLight *= fade;
+    specularLight *= fade;
     return diffuseLight + specularLight;
 }

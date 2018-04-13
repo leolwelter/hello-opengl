@@ -75,6 +75,7 @@ private:
     float lastMouseX;
     float lastMouseY;
     bool firstMouseInput;
+    float flashlightCooldown;
 
     // methods
     void renderObject(GameObject object, glm::mat4 view, glm::mat4 projection);    int processInput(GLFWwindow *window);
