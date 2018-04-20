@@ -10,13 +10,9 @@
 
 #define DAY_IN_SECONDS 24
 #define STD_CONST_ATTEN 1.0f
-#define STD_LIN_ATTEN 0.07f
-#define STD_QUAD_ATTEN 0.017f
+#define STD_LIN_ATTEN 0.02f
+#define STD_QUAD_ATTEN 0.012f
 
-struct ShaderLightStruct {
-    glm::vec3 position;
-    glm::vec3 color;
-};
 
 struct LightIntensity {
     glm::vec3 ambient;
@@ -24,102 +20,20 @@ struct LightIntensity {
     glm::vec3 specular;
 };
 
-static const Vertex defaultObstacleModel [] = {
-        {-1.0f, -1.0f, -1.0f, .0f, .0f, .0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f},
-        { 1.0f, -1.0f, -1.0f, .0f, .0f, .0f, 1.0f, 0.0f, 0.0f, 0.0f, -1.0f},
-        { 1.0f,  1.0f, -1.0f, .0f, .0f, .0f, 1.0f, 1.0f, 0.0f, 0.0f, -1.0f},
-        { 1.0f,  1.0f, -1.0f, .0f, .0f, .0f, 1.0f, 1.0f, 0.0f, 0.0f, -1.0f},
-        {-1.0f,  1.0f, -1.0f, .0f, .0f, .0f, 0.0f, 1.0f, 0.0f, 0.0f, -1.0f},
-        {-1.0f, -1.0f, -1.0f, .0f, .0f, .0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f},
-
-        {-1.0f, -1.0f,  1.0f, .0f, .0f, .0f, 0.0f, 0.0f, 0.0f, 0.0f,  1.0f},
-        { 1.0f, -1.0f,  1.0f, .0f, .0f, .0f, 1.0f, 0.0f, 0.0f, 0.0f,  1.0f},
-        { 1.0f,  1.0f,  1.0f, .0f, .0f, .0f, 1.0f, 1.0f, 0.0f, 0.0f,  1.0f},
-        { 1.0f,  1.0f,  1.0f, .0f, .0f, .0f, 1.0f, 1.0f, 0.0f, 0.0f,  1.0f},
-        {-1.0f,  1.0f,  1.0f, .0f, .0f, .0f, 0.0f, 1.0f, 0.0f, 0.0f,  1.0f},
-        {-1.0f, -1.0f,  1.0f, .0f, .0f, .0f, 0.0f, 0.0f, 0.0f, 0.0f,  1.0f},
-
-        {-1.0f,  1.0f,  1.0f, .0f, .0f, .0f, 1.0f, 0.0f, -1.0f, 0.0f, 0.0f},
-        {-1.0f,  1.0f, -1.0f, .0f, .0f, .0f, 1.0f, 1.0f, -1.0f, 0.0f, 0.0f},
-        {-1.0f, -1.0f, -1.0f, .0f, .0f, .0f, 0.0f, 1.0f, -1.0f, 0.0f, 0.0f},
-        {-1.0f, -1.0f, -1.0f, .0f, .0f, .0f, 0.0f, 1.0f, -1.0f, 0.0f, 0.0f},
-        {-1.0f, -1.0f,  1.0f, .0f, .0f, .0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f},
-        {-1.0f,  1.0f,  1.0f, .0f, .0f, .0f, 1.0f, 0.0f, -1.0f, 0.0f, 0.0f},
-
-        {1.0f,  1.0f,  1.0f, .0f, .0f, .0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f},
-        {1.0f,  1.0f, -1.0f, .0f, .0f, .0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f},
-        {1.0f, -1.0f, -1.0f, .0f, .0f, .0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f},
-        {1.0f, -1.0f, -1.0f, .0f, .0f, .0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f},
-        {1.0f, -1.0f,  1.0f, .0f, .0f, .0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f},
-        {1.0f,  1.0f,  1.0f, .0f, .0f, .0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f},
-
-        {-1.0f, -1.0f, -1.0f, .0f, .0f, .0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f},
-        { 1.0f, -1.0f, -1.0f, .0f, .0f, .0f, 1.0f, 1.0f, 0.0f, -1.0f, 0.0f},
-        { 1.0f, -1.0f,  1.0f, .0f, .0f, .0f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f},
-        { 1.0f, -1.0f,  1.0f, .0f, .0f, .0f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f},
-        {-1.0f, -1.0f,  1.0f, .0f, .0f, .0f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f},
-        {-1.0f, -1.0f, -1.0f, .0f, .0f, .0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f},
-
-        {-1.0f,  1.0f, -1.0f, .0f, .0f, .0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f},
-        { 1.0f,  1.0f, -1.0f, .0f, .0f, .0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f},
-        { 1.0f,  1.0f,  1.0f, .0f, .0f, .0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f},
-        { 1.0f,  1.0f,  1.0f, .0f, .0f, .0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f},
-        {-1.0f,  1.0f,  1.0f, .0f, .0f, .0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f},
-        {-1.0f,  1.0f, -1.0f, .0f, .0f, .0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f}
-};
-
 class LightSource: public GameObject{
 public:
     // constructors
-    LightSource() {}
-
-
-    LightSource(float x, float y, float z, glm::vec3 vColor, glm::vec3 intensities, glm::vec3 pscale, char axis, float speed)
-            :GameObject(x, y, z, 36),
-             rotAxis(axis), speed(speed)
+    LightSource(glm::vec3 position, glm::vec3 scale, char* modelPath, glm::vec3 intensities, glm::vec3 vColor, char axis)
+            :GameObject(position, scale, modelPath) ,rotAxis(axis), speed(speed)
     {
-        for (int i = 0; i < modelSize; i++) {
-            modelVerts[i] = defaultObstacleModel[i];
-            modelVerts[i].red = vColor.r;
-            modelVerts[i].green = vColor.g;
-            modelVerts[i].blue = vColor.b;
-        }
-        coordX = x;
-        coordY = y;
-        coordZ = z;
-        scale = pscale;
-        color = vColor;
         lIntensity = {intensities.x * vColor, intensities.y * vColor, intensities.z * vColor};
         lDirection = glm::vec3(0.0f, -1.0f, 0.0f);
         attenConstant = STD_CONST_ATTEN;
         attenLinear = STD_LIN_ATTEN;
         attenQuad = STD_QUAD_ATTEN;
-        generateVertexObjects();
-    }
-
-    LightSource(float x, float y, float z, glm::vec3 vColor, glm::vec3 intensities, glm::vec3 pscale)
-            :GameObject(x, y, z, 36),
-             color(vColor)
-    {
-        for (int i = 0; i < modelSize; i++) {
-            modelVerts[i] = defaultObstacleModel[i];
-            modelVerts[i].red = vColor.r;
-            modelVerts[i].green = vColor.g;
-            modelVerts[i].blue = vColor.b;
-        }
-        coordX = x;
-        coordY = y;
-        coordZ = z;
-        scale = pscale;
-        rotAxis = 'N';
-        speed = 0;
+        cutoffAngle = 30.0f;
+        cutoffOuter = 35.0f;
         color = vColor;
-        lIntensity = {intensities.x * vColor, intensities.y * vColor, intensities.z * vColor};
-        lDirection = glm::vec3(0.0f, -1.0f, 0.0f);
-        attenConstant = STD_CONST_ATTEN;
-        attenLinear = STD_LIN_ATTEN;
-        attenQuad = STD_QUAD_ATTEN;
-        generateVertexObjects();
     }
 
     // methods
@@ -133,39 +47,32 @@ public:
     }
 
     void orbitZ(float deltaT) {
-        float tmpX = coordX * cos(deltaT * speed / DAY_IN_SECONDS) - coordY * sin(deltaT * speed / DAY_IN_SECONDS);
-        float tmpY = coordY * cos(deltaT * speed / DAY_IN_SECONDS) + coordX * sin(deltaT * speed / DAY_IN_SECONDS);
-        coordX = tmpX;
-        coordY = tmpY;
+        float tmpX = position.x * cos(deltaT * speed / DAY_IN_SECONDS) - position.y * sin(deltaT * speed / DAY_IN_SECONDS);
+        float tmpY = position.y * cos(deltaT * speed / DAY_IN_SECONDS) + position.x * sin(deltaT * speed / DAY_IN_SECONDS);
+        position.x = tmpX;
+        position.y = tmpY;
     }
 
     void orbitX(float deltaT) {
-        float tmpY = coordY * cos(deltaT * speed / DAY_IN_SECONDS) - coordZ * sin(deltaT * speed / DAY_IN_SECONDS);
-        float tmpZ = coordZ * cos(deltaT * speed / DAY_IN_SECONDS) + coordY * sin(deltaT * speed / DAY_IN_SECONDS);
-        coordY = tmpY;
-        coordZ = tmpZ;
+        float tmpY = position.y * cos(deltaT * speed / DAY_IN_SECONDS) - position.z * sin(deltaT * speed / DAY_IN_SECONDS);
+        float tmpZ = position.z * cos(deltaT * speed / DAY_IN_SECONDS) + position.y * sin(deltaT * speed / DAY_IN_SECONDS);
+        position.y = tmpY;
+        position.z = tmpZ;
     }
 
     void orbitY(float deltaT) {
-        float tmpX = coordX * cos(deltaT * speed / DAY_IN_SECONDS) - coordZ * sin(deltaT * speed / DAY_IN_SECONDS);
-        float tmpZ = coordZ * cos(deltaT * speed / DAY_IN_SECONDS) + coordX * sin(deltaT * speed / DAY_IN_SECONDS);
-        coordX = tmpX;
-        coordZ = tmpZ;
-    }
-
-    ShaderLightStruct getShaderLightStruct() {
-        ShaderLightStruct tmp;
-        tmp.position = getPos();
-        tmp.color = color;
-        return tmp;
+        float tmpX = position.x * cos(deltaT * speed / DAY_IN_SECONDS) - position.z * sin(deltaT * speed / DAY_IN_SECONDS);
+        float tmpZ = position.z * cos(deltaT * speed / DAY_IN_SECONDS) + position.x * sin(deltaT * speed / DAY_IN_SECONDS);
+        position.x = tmpX;
+        position.z = tmpZ;
     }
 
     // attributes
     glm::vec3 color;
     LightIntensity lIntensity;
     glm::vec3 lDirection;   // for directional and spot lights
-    float cutoffAngle;      // for spot lights
-    float cutoffOuter;      // for spot lights
+    float cutoffAngle{};      // for spot lights
+    float cutoffOuter{};      // for spot lights
     char rotAxis;
     float speed;
     float attenConstant;

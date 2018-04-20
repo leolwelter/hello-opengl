@@ -10,12 +10,9 @@
 
 class Obstacle: public GameObject {
 public:
-    Obstacle();
-    Obstacle(float x, float y, float z);
-    Obstacle(float x, float y, float z, float scaleX, float scaleY, float scaleZ);
-
-private:
-
+    Obstacle(glm::vec3 position, glm::vec3 scale, Material material, char* modelpath)
+            :GameObject(position, scale, modelpath)
+    {}
 };
 
 

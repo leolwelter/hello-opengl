@@ -9,16 +9,13 @@
 #include <iostream>
 
 
-
-
-
 class Creature: public GameObject {
 public:
     // constructors
-    Creature();
-    Creature(float x, float y, float z);
+    Creature(glm::vec3 position, glm::vec3 scale, char* modelPath)
+            :hp(1.0f), attack(1.0f), defense(1.0f), speed(3.0f), GameObject(position, scale, modelPath)
+    {}
 
-    // stat accessors
     void setHP(int hp_t) { hp = hp_t; };
     void setAttack(int attack_t) { attack = attack_t; };
     void setDefense(int defense_t) { defense = defense_t; };
@@ -29,16 +26,10 @@ public:
     int getDefense() { return defense; };
     float getSpeed() { return speed; };
 
-    // game actions
-    glm::mat4 move(float dx, float dy, float dz);
-    glm::mat4 move(int direction);
-    int direction;
-
-
 private:
-    int hp;
-    int attack;
-    int defense;
+    float hp;
+    float attack;
+    float defense;
     float speed;
 };
 

@@ -36,51 +36,19 @@ Game::Game(bool run)
 
     /* ---- game objects ----*/
     // creatures
-    player = Creature(0.5f, -0.2f, 0.0f);
-    enemy =  Creature(1.0f, -0.2f, 0.0f);
-    creatures.push_back(player);
-    creatures.push_back(enemy);
+    Creature suit(glm::vec3(0.0f), glm::vec3(0.1f), "/home/leo/work/textgame/assets/nanosuit_model/nanosuit.obj");
+    creatures.push_back(suit);
 
     // light sources
-    glm::vec3 stdIntensities(0.1f, 0.6f, 1.0f);
-    LightSource ruby = LightSource(2.0f, 2.0f, 0.0f, glm::vec3(1.0f, 0.3f, 0.3f), stdIntensities, glm::vec3(0.1f, 0.1f, 0.1f), 'Y', 24.0f);
-    pointLights.push_back(ruby);
-    LightSource emerald= LightSource(0.0f, 2.0f, 0.0f, glm::vec3(0.3f, 1.0f, 0.3f), stdIntensities, glm::vec3(0.1f, 0.1f, 0.1f), 'X', 24.0f);
-    pointLights.push_back(emerald);
-    LightSource sapphire = LightSource(0.0f, -2.0f, 0.0f, glm::vec3(0.3f, 0.3f, 1.0f), stdIntensities, glm::vec3(0.1f, 0.1f, 0.1f), 'Z', 24.0f);
-    pointLights.push_back(sapphire);
-
-    LightSource sun = LightSource(15.0f, 50.0f, 15.0f, glm::vec3(0.9f, 0.8f, 0.1f), glm::vec3(0.0f, 1.0f, 1.0f), glm::vec3(2.0f, 2.0f, 2.0f));
-    sun.lDirection = glm::vec3(-0.2f, -1.0f, -0.2f);
+    LightSource sun(glm::vec3(2.0f, 2.0f, 20.0f), glm::vec3(0.05f), "/home/leo/work/textgame/assets/nanosuit_model/nanosuit.obj", glm::vec3(0.2f, 0.8f, 1.0f), glm::vec3(.9f, .9f, .9f), 'N');
     directionalLights.push_back(sun);
-
-    LightSource flashlight = LightSource(0.0f, 5.0f, 0.0f, glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.0f, 1.0f, 1.0f), glm::vec3(.1f, .1f, .1f));
-    flashlight.cutoffAngle = 12;
-    flashlight.cutoffOuter = 17;
-    flashlight.attenLinear = 0.015f;
-    flashlight.attenQuad = 0.051;
-    spotLights.push_back(flashlight);
-
+    LightSource firefly(glm::vec3(2.0f, 2.0f, 0.0f), glm::vec3(0.05f), "/home/leo/work/textgame/assets/nanosuit_model/nanosuit.obj", glm::vec3(0.2f, 0.8f, 1.0f), glm::vec3(.9f, .2f, .2f), 'N');
+    pointLights.push_back(firefly);
+    LightSource lamp(glm::vec3(0.0f, 3.0f, 0.0f), glm::vec3(0.05f), "/home/leo/work/textgame/assets/nanosuit_model/nanosuit.obj", glm::vec3(0.2f, 0.8f, 1.0f), glm::vec3(.7f, .7f, .9f), 'N');
+    spotLights.push_back(lamp);
     // obstacles
-    Obstacle floor = Obstacle(0.0f, -0.2f, 0.0f, 15.0f, 0.1f, 15.0f);
-    Obstacle b1 = Obstacle(1.0f, 0.2f, 0.3f, 2.0f, 2.0f, 1.0f);
-    Obstacle b2 = Obstacle(1.5f, 0.1f, 1.3f, 1.0f, 2.0f, 2.0f);
-    Obstacle b3 = Obstacle(2.0f, 0.4f, 0.3f, 2.0f, 1.0f, 2.0f);
-    Obstacle b4 = Obstacle(0.0f, 0.0f, 0.0f);
-    Obstacle wallEast =  Obstacle(3.0f,  2.5f, 0.0f, 0.1f, 15.0f, 15.0f);
-    Obstacle wallWest =  Obstacle(-3.0f, 2.5f, 0.0f, 0.1f, 15.0f, 15.0f);
-    Obstacle wallSouth = Obstacle(0.0f,  2.5f, -3.0f, 15.0f, 15.0f, 0.1f);
-    Obstacle wallNorth = Obstacle(0.0f,  2.5f, 3.0f, 15.0f, 15.0f, 0.1f);
-    obstacles.push_back(b1);
-    obstacles.push_back(b2);
-    obstacles.push_back(b3);
-    obstacles.push_back(b4);
-    obstacles.push_back(floor);
-    obstacles.push_back(wallNorth);
-    obstacles.push_back(wallSouth);
-    obstacles.push_back(wallEast);
-    obstacles.push_back(wallWest);
 
+    // compile and assign shaders for every GameObject
     for (auto &obj: creatures) {
         obj.shader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/FragmentShader.glsl");
     }
@@ -88,84 +56,35 @@ Game::Game(bool run)
         obj.shader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/FragmentShader.glsl");
     }
     for (auto &obj: pointLights) {
-        obj.shader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/LightSourceFragmentShader.glsl");
+        obj.shader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/FragmentShader.glsl");
     }
     for (auto &obj: directionalLights) {
-        obj.shader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/LightSourceFragmentShader.glsl");
+        obj.shader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/FragmentShader.glsl");
     }
     for (auto &obj: spotLights) {
-        obj.shader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/LightSourceFragmentShader.glsl");
+        obj.shader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/FragmentShader.glsl");
     }
-
-    /* ---- texture loading ---- */
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-    int width, height, nChannels;
-    unsigned char* texData = stbi_load("../assets/container.jpg", &width, &height, &nChannels, 0);
-    glGenTextures(1, &boxTex);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, boxTex);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, texData);
-    glGenerateMipmap(GL_TEXTURE_2D);
-    stbi_image_free(texData);
-
-    texData = stbi_load("../assets/ship.png", &width, &height, &nChannels, 0);
-    glGenTextures(1, &shipTex);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, shipTex);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, texData);
-    glGenerateMipmap(GL_TEXTURE_2D);
-    stbi_image_free(texData);
-
-    stbi_set_flip_vertically_on_load(true);
-    texData = stbi_load("../assets/ship.png", &width, &height, &nChannels, 0);
-    glGenTextures(1, &faceTex);
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, faceTex);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, texData);
-    glGenerateMipmap(GL_TEXTURE_2D);
-    stbi_image_free(texData);
-
-    // assign textures to shader uniforms
-    enemyShader.use();
-    enemyShader.setInt("tex1", 1);
-
-    playerShader.use();
-    playerShader.setInt("tex1", 1);
-
-    boxShader.use();
-    boxShader.setInt("tex1", 0);
-    boxShader.setInt("tex2", 2);
 
     /* ---- game logic initialization ---- */
     lastMouseX = SCR_WIDTH / 2;
     lastMouseY = SCR_HEIGHT / 2;
     firstMouseInput = true;
     flashlightCooldown = 0.0f;
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    playerBulletCooldown = 0.0f;
+//    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
 
 void Game::run() {
-    // bind textures
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, boxTex);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, shipTex);
-
     while(!glfwWindowShouldClose(window)) {
-        glClearColor(.0f, .0f, .0f, 1.0f);
+        glClearColor(.1f, .1f, .1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // calculate time delta
         float frameT = glfwGetTime();
         deltaT = frameT - lastFrameT;
         lastFrameT = frameT;
-        if (flashlightCooldown > 0)
-            flashlightCooldown -= deltaT;
+
+        // update cooldowns
 
         // user input and calculations
         processInput(window);
@@ -191,6 +110,10 @@ void Game::run() {
             renderObject(obj, view, projection);
         }
 
+        for (auto &obj: spotLights) {
+            renderObject(obj, view, projection);
+        }
+
         for (auto &obj: obstacles) {
             renderObject(obj, view, projection);
         }
@@ -199,10 +122,6 @@ void Game::run() {
         glfwPollEvents();
     }
     // CLEAN UP
-    glDeleteVertexArrays(1, &player.VAO);
-    glDeleteVertexArrays(1, &enemy.VAO);
-    glDeleteBuffers(1, &player.VBO);
-    glDeleteBuffers(1, &enemy.VBO);
     glfwTerminate();
 }
 
@@ -211,18 +130,24 @@ void Game::renderObject(GameObject object, glm::mat4 view, glm::mat4 projection)
     object.shader.use();
     // view transformations
     glm::mat4 model = glm::mat4(1.0f);
-    model = glm::translate(model, object.getPos());
+    model = glm::translate(model, object.position);
     model = glm::scale(model, object.scale);
     object.shader.setMat4("model", model);
     object.shader.setMat4("view", view);
     object.shader.setMat4("projection", projection);
+
+    glm::vec3 viewPos = camera.cameraPos;
+    object.shader.setVec3("playerPos", viewPos);
+
+    // set shader materials
     object.shader.setVec3("material.ambient", object.material.ambient);
     object.shader.setVec3("material.diffuse", object.material.diffuse);
     object.shader.setVec3("material.specular", object.material.specular);
     object.shader.setFloat("material.shininess", object.material.shininess);
 
+    // set shader lighting properties
     for(int i = 0; i < pointLights.capacity(); i++) {
-        glm::vec3 lPos = pointLights[i].getPos();
+        glm::vec3 lPos = pointLights[i].position;
         object.shader.setVec3("pointLights[" + std::to_string(i) + "].position", lPos);
         object.shader.setVec3("pointLights[" + std::to_string(i) + "].ambient", pointLights[i].lIntensity.ambient);
         object.shader.setVec3("pointLights[" + std::to_string(i) + "].diffuse", pointLights[i].lIntensity.diffuse);
@@ -238,26 +163,20 @@ void Game::renderObject(GameObject object, glm::mat4 view, glm::mat4 projection)
         object.shader.setVec3("dirLights[" + std::to_string(i) + "].specular", directionalLights[i].lIntensity.specular);
     }
 
-
-    glm::vec3 viewPos = camera.cameraPos;
-    object.shader.setVec3("playerPos", viewPos);
-    glm::vec3 flashlightTarget = -camera.cameraTarget;
-    object.shader.setVec3("spotLights[" + std::to_string(0) + "].position", viewPos);
-    object.shader.setVec3("spotLights[" + std::to_string(0) + "].spotDir", flashlightTarget);
-    object.shader.setFloat("spotLights[" + std::to_string(0) + "].cutoffAngle", glm::cos(glm::radians(spotLights[0].cutoffAngle)));
-    object.shader.setFloat("spotLights[" + std::to_string(0) + "].cutoffOuter", glm::cos(glm::radians(spotLights[0].cutoffOuter)));
-    object.shader.setVec3("spotLights[" + std::to_string(0) + "].diffuse", spotLights[0].lIntensity.diffuse);
-    object.shader.setVec3("spotLights[" + std::to_string(0) + "].specular", spotLights[0].lIntensity.specular);
-    object.shader.setFloat("spotLights[" + std::to_string(0) + "].constant", spotLights[0].attenConstant);
-    object.shader.setFloat("spotLights[" + std::to_string(0) + "].linear", spotLights[0].attenLinear);
-    object.shader.setFloat("spotLights[" + std::to_string(0) + "].quadratic", spotLights[0].attenQuad);
-
-
-
+    for(int i = 0; i < spotLights.capacity(); i++) {
+        object.shader.setVec3("spotLights[" + std::to_string(i) + "].position", spotLights[i].position);
+        object.shader.setVec3("spotLights[" + std::to_string(i) + "].spotDir", spotLights[i].lDirection);
+        object.shader.setFloat("spotLights[" + std::to_string(i) + "].cutoffAngle", glm::cos(glm::radians(spotLights[i].cutoffAngle)));
+        object.shader.setFloat("spotLights[" + std::to_string(i) + "].cutoffOuter", glm::cos(glm::radians(spotLights[i].cutoffOuter)));
+        object.shader.setVec3("spotLights[" + std::to_string(i) + "].diffuse", spotLights[i].lIntensity.diffuse);
+        object.shader.setVec3("spotLights[" + std::to_string(i) + "].specular", spotLights[i].lIntensity.specular);
+        object.shader.setFloat("spotLights[" + std::to_string(i) + "].constant", spotLights[i].attenConstant);
+        object.shader.setFloat("spotLights[" + std::to_string(i) + "].linear", spotLights[i].attenLinear);
+        object.shader.setFloat("spotLights[" + std::to_string(i) + "].quadratic", spotLights[i].attenQuad);
+    }
 
     // draw
-    glBindVertexArray(object.VAO);
-    glDrawArrays(GL_TRIANGLES, 0, object.modelSize);
+    object.model.draw(object.shader);
 }
 
 
@@ -268,20 +187,20 @@ int Game::processInput(GLFWwindow* window) {
 
     // position
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        camera.cameraPos += deltaT * player.getSpeed() * camera.cameraFront;
+        camera.cameraPos += deltaT * CAMERA_SPEED * camera.cameraFront;
     }
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        camera.cameraPos -= deltaT * player.getSpeed() * camera.cameraFront;
+        camera.cameraPos -= deltaT * CAMERA_SPEED * camera.cameraFront;
     }
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        camera.cameraPos -= deltaT * player.getSpeed() * camera.cameraRight;
+        camera.cameraPos -= deltaT * CAMERA_SPEED * camera.cameraRight;
     }
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        camera.cameraPos += deltaT * player.getSpeed() * camera.cameraRight;
+        camera.cameraPos += deltaT * CAMERA_SPEED * camera.cameraRight;
     }
-    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+    if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
         if (flashlightCooldown <= 0) {
-            flashlightCooldown = 1.0f;
+            flashlightCooldown = FLASHLIGHT_COOLDOWN;
             if (spotLights.at(0).lIntensity.diffuse == glm::vec3(0.0f)) {
                 spotLights.at(0).lIntensity.diffuse = glm::vec3(1.0f);
                 spotLights.at(0).lIntensity.ambient= glm::vec3(1.0f);

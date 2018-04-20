@@ -1,5 +1,5 @@
 #version 330 core
-# define NR_POINT_LIGHTS 1
+# define NR_POINT_LIGHTS 3
 # define NR_DIR_LIGHTS 1
 # define NR_SPOT_LIGHTS 1
 
@@ -9,6 +9,7 @@ struct Material {
     vec3 diffuse;
     vec3 specular;
 };
+
 
 struct PointLight {
     vec3 position;
@@ -38,19 +39,22 @@ struct SpotLight {
     float quadratic;
 };
 
-in vec3 fragPos;
+
+
+in vec3 vColor;
 in vec2 vTexCoord;
 in vec3 vNormal;
+in vec3 fragPos;
 
 out vec4 FragColor;
 
+uniform sampler2D tex1;
+uniform sampler2D tex2;
 uniform vec3 playerPos;
-uniform sampler2D texture_diffuse;
-uniform sampler2D texture_specular;
-uniform Material material;
 uniform PointLight pointLights[NR_POINT_LIGHTS];
 uniform DirectionalLight dirLights[NR_DIR_LIGHTS];
 uniform SpotLight spotLights[NR_SPOT_LIGHTS];
+uniform Material material;
 
 vec3 pointLightCalc(PointLight);
 vec3 dirLightCalc(DirectionalLight);
@@ -70,7 +74,7 @@ void main()
         lightOutput += spotLightCalc(spotLights[k]);
     }
 
-    FragColor = vec4(lightOutput, 1.0f) * texture(texture_diffuse, vTexCoord) * texture(texture_specular, vTexCoord);
+    FragColor = vec4(lightOutput, 1.0f) * vec4(vColor, 1.0f);
 }
 
 vec3 pointLightCalc(PointLight light) {

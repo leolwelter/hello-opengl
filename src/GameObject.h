@@ -10,7 +10,9 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <vector>
 #include "Shader.h"
+#include "Model.h"
 
 enum DIRECTION {
     UP, LEFT, DOWN, RIGHT
@@ -23,36 +25,25 @@ struct Material {
     glm::vec3 specular;
 };
 
-struct Vertex {
-    float x, y, z;
-    float red, green, blue;
-    float texX, texY;
-    float normX, normY, normZ;
-};
-
-
 
 class GameObject {
 public:
-    // constructors
-    GameObject();
-    GameObject(float x, float y, float z, int mSize);
+    GameObject(glm::vec3 position, glm::vec3 scale, char* modelPath) {
+        this->position = position;
+        this->scale = scale;
+        this->model = Model(modelPath);
+        material.shininess = 64;
+        material.ambient = glm::vec3(0.5f);
+        material.diffuse = glm::vec3(0.9f);
+        material.specular = glm::vec3(1.0f);
 
-    // attributes
-    unsigned int VBO;
-    unsigned int VAO;
-    Vertex* modelVerts; //model vertex data
-    int modelSize;
-    float coordX;
-    float coordY;
-    float coordZ;
+    };
+
+    glm::vec3 position;
     glm::vec3 scale;
-    Shader shader;
     Material material;
-
-    // methods
-    void generateVertexObjects(void);
-    glm::vec3 getPos();
+    Shader shader;
+    Model model;
 };
 
 
