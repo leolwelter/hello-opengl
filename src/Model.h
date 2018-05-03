@@ -94,9 +94,19 @@ private:
     std::vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName) {
         std::vector<Texture> texts;
         for (unsigned int i = 0; i < mat->GetTextureCount(type); i++) {
+            unsigned int j = mat->GetTextureCount(type);
             aiString str;
             mat->GetTexture(type, i, &str);
             Texture tex;
+
+            // strip double backslash from paths
+            std::string checkStr = str.C_Str();
+            std::string dbSlash = "\\";
+            if (checkStr.find(dbSlash) != std::string::npos) {
+                checkStr.replace(checkStr.find(dbSlash), dbSlash.length(), "/");
+                str.Set(checkStr);
+            }
+
             tex.id = textureFromFile(str.C_Str(), dir, false);
             tex.type = typeName;
             tex.path = str.C_Str();

@@ -28,7 +28,8 @@ struct Material {
 
 class GameObject {
 public:
-    GameObject(glm::vec3 position, glm::vec3 scale, char* modelPath) {
+    GameObject(glm::vec3 position, glm::vec3 scale, char* modelPath)
+    :pitch(0.0f), yaw(-90.0f) {
         this->position = position;
         this->scale = scale;
         this->model = Model(modelPath);
@@ -36,11 +37,20 @@ public:
         material.ambient = glm::vec3(0.5f);
         material.diffuse = glm::vec3(0.9f);
         material.specular = glm::vec3(1.0f);
+        modelFront = glm::vec3(0.0f, 0.0f, -1.0f);
+        modelUp = glm::vec3(0.0f, 1.0f, 0.0f);
+        modelRight = glm::normalize(glm::cross(glm::vec3(.0f, 1.0f, .0f), modelFront));
 
     };
 
+
     glm::vec3 position;
     glm::vec3 scale;
+    glm::vec3 modelFront;
+    glm::vec3 modelRight;
+    glm::vec3 modelUp;
+    float pitch;
+    float yaw;
     Material material;
     Shader shader;
     Model model;

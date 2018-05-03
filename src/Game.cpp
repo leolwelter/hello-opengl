@@ -4,7 +4,7 @@
 
 #include "Game.h"
 
-Game::Game(bool run)
+Game::Game(bool debug)
 {
     std::cout << "Initializing..." << std::endl;
 
@@ -36,16 +36,30 @@ Game::Game(bool run)
 
     /* ---- game objects ----*/
     // creatures
-    Creature suit(glm::vec3(0.0f), glm::vec3(0.1f), "/home/leo/work/textgame/assets/nanosuit_model/nanosuit.obj");
-    creatures.push_back(suit);
+    char *nanosuitModel = "/home/leo/work/textgame/assets/nanosuit_model/nanosuit.obj";
+    char *planetModel = "/home/leo/work/textgame/assets/planet_model/earth.3ds";
+    char *dragonModel = "/home/leo/work/textgame/assets/black_dragon_model/Dragon 2.5_fbx.fbx";
+
+    Creature dragon(glm::vec3(2.0f), glm::vec3(.03f), dragonModel);
+    dragon.pitch = -90.0f;
+    creatures.push_back(dragon);
+
+    Creature earth(glm::vec3(5.0f, 0.0f, 5.0f), glm::vec3(0.05f), planetModel);
+    creatures.push_back(earth);
 
     // light sources
-    LightSource sun(glm::vec3(2.0f, 2.0f, 20.0f), glm::vec3(0.05f), "/home/leo/work/textgame/assets/nanosuit_model/nanosuit.obj", glm::vec3(0.2f, 0.8f, 1.0f), glm::vec3(.9f, .9f, .9f), 'N');
-    directionalLights.push_back(sun);
-    LightSource firefly(glm::vec3(2.0f, 2.0f, 0.0f), glm::vec3(0.05f), "/home/leo/work/textgame/assets/nanosuit_model/nanosuit.obj", glm::vec3(0.2f, 0.8f, 1.0f), glm::vec3(.9f, .2f, .2f), 'N');
+//    LightSource sun(glm::vec3(2.0f, 10.0f, 2.0f), glm::vec3(0.05f), planetModel, LIGHTSOURCE_STD_INTENSITY, glm::vec3(.9f, .8f, .7f), 'N');
+//    sun.lDirection = glm::vec3(-2.0f, -1.0f, -2.0f);
+//    directionalLights.push_back(sun);
+
+    LightSource firefly(glm::vec3(2.0f, 2.0f, 0.0f), glm::vec3(0.05f), planetModel, LIGHTSOURCE_LOW_INTENSITY, glm::vec3(.9f, .2f, .2f), 'N');
     pointLights.push_back(firefly);
-    LightSource lamp(glm::vec3(0.0f, 3.0f, 0.0f), glm::vec3(0.05f), "/home/leo/work/textgame/assets/nanosuit_model/nanosuit.obj", glm::vec3(0.2f, 0.8f, 1.0f), glm::vec3(.7f, .7f, .9f), 'N');
-    spotLights.push_back(lamp);
+
+
+    LightSource flashLight(camera.cameraPos, glm::vec3(0.05f), planetModel, LIGHTSOURCE_HIGH_INTENSITY, glm::vec3(.6f, .9f, .6f), 'N');
+    flashLight.lDirection = camera.cameraTarget;
+    spotLights.push_back(flashLight);
+
     // obstacles
 
     // compile and assign shaders for every GameObject
@@ -71,7 +85,8 @@ Game::Game(bool run)
     firstMouseInput = true;
     flashlightCooldown = 0.0f;
     playerBulletCooldown = 0.0f;
-//    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
 
 void Game::run() {
@@ -85,6 +100,7 @@ void Game::run() {
         lastFrameT = frameT;
 
         // update cooldowns
+        flashlightCooldown = (flashlightCooldown <= 0) ? 0 : flashlightCooldown - deltaT;
 
         // user input and calculations
         processInput(window);
@@ -94,29 +110,29 @@ void Game::run() {
 
         // projection matrix (perspective not ortho)
         glm::mat4 projection(1.0f);
-        projection = glm::perspective(glm::radians(90.0f), (float)SCR_WIDTH / SCR_HEIGHT, 0.1f, 100.0f);
+        projection = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / SCR_HEIGHT, 0.1f, 100.0f);
 
 
         for (auto &obj: creatures) {
             renderObject(obj, view, projection);
         }
 
-        for (auto &obj: pointLights) {
-            obj.orbit(deltaT);
-            renderObject(obj, view, projection);
-        }
-
-        for (auto &obj: directionalLights) {
-            renderObject(obj, view, projection);
-        }
-
-        for (auto &obj: spotLights) {
-            renderObject(obj, view, projection);
-        }
-
         for (auto &obj: obstacles) {
             renderObject(obj, view, projection);
         }
+
+//        for (auto &obj: pointLights) {
+//            obj.orbit(deltaT);
+//            renderObject(obj, view, projection);
+//        }
+//
+//        for (auto &obj: directionalLights) {
+//            renderObject(obj, view, projection);
+//        }
+//
+//        for (auto &obj: spotLights) {
+//            renderObject(obj, view, projection);
+//        }
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -128,14 +144,24 @@ void Game::run() {
 
 void Game::renderObject(GameObject object, glm::mat4 view, glm::mat4 projection) {
     object.shader.use();
-    // view transformations
+
+    // model transformation
+    float faceX = cos(glm::radians(object.pitch)) * cos(glm::radians(object.yaw));
+    float faceY = sin(glm::radians(object.pitch));
+    float faceZ = cos(glm::radians(object.pitch)) * sin(glm::radians(object.yaw));
+    object.modelFront = glm::normalize(glm::vec3(faceX, faceY, faceZ));
+    object.modelRight = glm::normalize(glm::cross(object.modelFront, object.modelUp));
+
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, object.position);
     model = glm::scale(model, object.scale);
+    model = glm::rotate(model, glm::degrees(object.yaw), object.modelUp);
+    model = glm::rotate(model, glm::degrees(object.pitch), object.modelRight);
     object.shader.setMat4("model", model);
     object.shader.setMat4("view", view);
     object.shader.setMat4("projection", projection);
 
+    // view transformations
     glm::vec3 viewPos = camera.cameraPos;
     object.shader.setVec3("playerPos", viewPos);
 
@@ -188,29 +214,51 @@ int Game::processInput(GLFWwindow* window) {
     // position
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
         camera.cameraPos += deltaT * CAMERA_SPEED * camera.cameraFront;
+        spotLights[0].position = camera.cameraPos;
     }
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
         camera.cameraPos -= deltaT * CAMERA_SPEED * camera.cameraFront;
+        spotLights[0].position = camera.cameraPos;
     }
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
         camera.cameraPos -= deltaT * CAMERA_SPEED * camera.cameraRight;
+        spotLights[0].position = camera.cameraPos;
     }
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
         camera.cameraPos += deltaT * CAMERA_SPEED * camera.cameraRight;
+        spotLights[0].position = camera.cameraPos;
     }
     if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
         if (flashlightCooldown <= 0) {
             flashlightCooldown = FLASHLIGHT_COOLDOWN;
             if (spotLights.at(0).lIntensity.diffuse == glm::vec3(0.0f)) {
-                spotLights.at(0).lIntensity.diffuse = glm::vec3(1.0f);
-                spotLights.at(0).lIntensity.ambient= glm::vec3(1.0f);
-                spotLights.at(0).lIntensity.specular = glm::vec3(1.0f);
+                spotLights.at(0).lIntensity = {spotLights.at(0).color, spotLights.at(0).color, spotLights.at(0).color};
             }
             else {
                 spotLights.at(0).lIntensity.diffuse = glm::vec3(0.0f);
                 spotLights.at(0).lIntensity.ambient= glm::vec3(0.0f);
                 spotLights.at(0).lIntensity.specular = glm::vec3(0.0f);
             }
+        }
+    }
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+        for (auto &obj: creatures) {
+            obj.pitch -= deltaT * 0.01f;
+        }
+    }
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+        for (auto &obj: creatures) {
+            obj.pitch += deltaT * 0.01f;
+        }
+    }
+    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+        for (auto &obj: creatures) {
+            obj.yaw -= deltaT * 0.01f;
+        }
+    }
+    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+        for (auto &obj: creatures) {
+            obj.yaw += deltaT * 0.01f;
         }
     }
 
@@ -256,4 +304,7 @@ void Game::mouse_callback(GLFWwindow* window, double x, double y) {
     camera.cameraFront = glm::normalize(glm::vec3(faceX, faceY, faceZ));
     camera.cameraRight = glm::normalize(glm::cross(camera.cameraFront, camera.cameraUp));
     camera.cameraTarget = glm::normalize(-camera.cameraFront);
+
+    // set flashlight direction to camera's target
+    spotLights.at(0).lDirection = camera.cameraFront; //camera.cameraTarget;
 }

@@ -10,8 +10,12 @@
 
 #define DAY_IN_SECONDS 24
 #define STD_CONST_ATTEN 1.0f
-#define STD_LIN_ATTEN 0.02f
-#define STD_QUAD_ATTEN 0.012f
+#define STD_LIN_ATTEN 0.07f
+#define STD_QUAD_ATTEN 0.017f
+
+static const glm::vec3 LIGHTSOURCE_STD_INTENSITY = glm::vec3(0.2f, 3.0f, 1.0f);
+static const glm::vec3 LIGHTSOURCE_LOW_INTENSITY = glm::vec3(0.2f, 1.0f, 1.0f);
+static const glm::vec3 LIGHTSOURCE_HIGH_INTENSITY = glm::vec3(0.2f, 6.0f, 1.0f);
 
 
 struct LightIntensity {

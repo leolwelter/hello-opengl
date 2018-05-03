@@ -29,13 +29,13 @@
 
 const unsigned int SCR_WIDTH = 1200;
 const unsigned int SCR_HEIGHT = 800;
-const double FLASHLIGHT_COOLDOWN = 0.2;
-const double BULLET_COOLDOWN = 0.2;
+const double FLASHLIGHT_COOLDOWN = 0.4;
+const double BULLET_COOLDOWN = 0.4;
 
 class Game {
 public:
     // constructors
-    Game(bool run);
+    Game(bool debug);
     static Game& getInstance()
     {
         static Game instance(true);
