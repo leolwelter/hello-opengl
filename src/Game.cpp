@@ -14,6 +14,7 @@ Game::Game(bool debug)
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Dylan's Game", nullptr, nullptr);
+//    glfwSetWindowPos(window, MAX_SCR_WIDTH / 4, MAX_SCR_HEIGHT);
     glfwMakeContextCurrent(window);
 
     // init window
@@ -37,26 +38,46 @@ Game::Game(bool debug)
     /* ---- game objects ----*/
     // creatures
     char *nanosuitModel = "/home/leo/work/textgame/assets/nanosuit_model/nanosuit.obj";
-    char *planetModel = "/home/leo/work/textgame/assets/planet_model/earth.3ds";
     char *dragonModel = "/home/leo/work/textgame/assets/black_dragon_model/Dragon 2.5_fbx.fbx";
+    char *farmHouseModel = "/home/leo/work/textgame/assets/farmhouse_model/farmhouse_obj.obj";
+    char *eyeModel = "/home/leo/work/textgame/assets/eyeball_model/eyeball.obj";
+    char *boxModel = "/home/leo/work/textgame/assets/box_model/box.obj";
 
-    Creature dragon(glm::vec3(2.0f), glm::vec3(.03f), dragonModel);
-    dragon.pitch = -90.0f;
-    creatures.push_back(dragon);
+    float creatureYaw = 0.0f;
+    int numCreatures = 6;
+    float circRadius = 3.0f;
+    float tmpX = circRadius;
+    float tmpZ = circRadius;
+    float dTheta = 360.0f / numCreatures;
+    for (int i = 0; i < numCreatures; i++) {
+        Creature cr(glm::vec3(tmpX, 0.0f, tmpZ), glm::vec3(.2f), nanosuitModel);
+        creatureYaw += dTheta;
+        cr.yaw = creatureYaw;
+        cr.pitch = -90.0f;
+        tmpX = cr.position.x * cos((M_PI * dTheta) / 180) - cr.position.z * sin((M_PI * dTheta) / 180);
+        tmpZ = cr.position.z * cos((M_PI * dTheta) / 180) + cr.position.x * sin((M_PI * dTheta) / 180);
+        creatures.push_back(cr);
+    }
 
-    Creature earth(glm::vec3(5.0f, 0.0f, 5.0f), glm::vec3(0.05f), planetModel);
-    creatures.push_back(earth);
 
     // light sources
-//    LightSource sun(glm::vec3(2.0f, 10.0f, 2.0f), glm::vec3(0.05f), planetModel, LIGHTSOURCE_STD_INTENSITY, glm::vec3(.9f, .8f, .7f), 'N');
+//    LightSource sun(glm::vec3(2.0f, 10.0f, 2.0f), glm::vec3(0.05f), boxModel, LIGHTSOURCE_HIGH_INTENSITY, glm::vec3(.9f, .8f, .7f), 'N');
 //    sun.lDirection = glm::vec3(-2.0f, -1.0f, -2.0f);
 //    directionalLights.push_back(sun);
 
-    LightSource firefly(glm::vec3(2.0f, 2.0f, 0.0f), glm::vec3(0.05f), planetModel, LIGHTSOURCE_LOW_INTENSITY, glm::vec3(.9f, .2f, .2f), 'N');
-    pointLights.push_back(firefly);
+    srand((unsigned int)glfwGetTime());
+    int bound = 10;
+    char orbits [] = {'X', 'Y', 'Z'};
+
+    for (int i = 0; i < 5; i++) {
+        glm::vec3 randPos(rand() % bound, rand() % (bound / 2), rand() % bound);
+        glm::vec3 randColor((rand() % 100) / 100.0f, (rand() % 100) / 100.0f, (rand() % 100) / 100.0f);
+        LightSource light(randPos, glm::vec3(0.1f), boxModel, LIGHTSOURCE_HIGH_INTENSITY, randColor, orbits[rand() % 3]);
+        pointLights.push_back(light);
+    }
 
 
-    LightSource flashLight(camera.cameraPos, glm::vec3(0.05f), planetModel, LIGHTSOURCE_HIGH_INTENSITY, glm::vec3(.6f, .9f, .6f), 'N');
+    LightSource flashLight(camera.cameraPos, glm::vec3(0.05f), boxModel, LIGHTSOURCE_STD_INTENSITY, glm::vec3(.7f, .7f, .9f), 'N');
     flashLight.lDirection = camera.cameraTarget;
     spotLights.push_back(flashLight);
 
@@ -70,6 +91,8 @@ Game::Game(bool debug)
         obj.shader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/FragmentShader.glsl");
     }
     for (auto &obj: pointLights) {
+        if (obj.rotAxis != 'N')
+            obj.orbit(deltaT);
         obj.shader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/FragmentShader.glsl");
     }
     for (auto &obj: directionalLights) {
@@ -121,10 +144,10 @@ void Game::run() {
             renderObject(obj, view, projection);
         }
 
-//        for (auto &obj: pointLights) {
-//            obj.orbit(deltaT);
-//            renderObject(obj, view, projection);
-//        }
+        for (auto &obj: pointLights) {
+            obj.orbit(deltaT);
+            renderObject(obj, view, projection);
+        }
 //
 //        for (auto &obj: directionalLights) {
 //            renderObject(obj, view, projection);

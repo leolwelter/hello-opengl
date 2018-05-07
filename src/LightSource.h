@@ -36,7 +36,7 @@ public:
         attenLinear = STD_LIN_ATTEN;
         attenQuad = STD_QUAD_ATTEN;
         cutoffAngle = 30.0f;
-        cutoffOuter = 35.0f;
+        cutoffOuter = 33.0f;
         color = vColor;
     }
 

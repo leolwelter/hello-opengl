@@ -27,8 +27,10 @@
 #include "Camera.h"
 #include "LightSource.h"
 
-const unsigned int SCR_WIDTH = 1200;
-const unsigned int SCR_HEIGHT = 800;
+const unsigned int SCR_WIDTH = 800;
+const unsigned int SCR_HEIGHT = 600;
+const unsigned int MAX_SCR_WIDTH = 1366;
+const unsigned int MAX_SCR_HEIGHT = 768;
 const double FLASHLIGHT_COOLDOWN = 0.4;
 const double BULLET_COOLDOWN = 0.4;
 

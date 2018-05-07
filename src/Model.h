@@ -102,7 +102,7 @@ private:
             // strip double backslash from paths
             std::string checkStr = str.C_Str();
             std::string dbSlash = "\\";
-            if (checkStr.find(dbSlash) != std::string::npos) {
+            while (checkStr.find(dbSlash) != std::string::npos) {
                 checkStr.replace(checkStr.find(dbSlash), dbSlash.length(), "/");
                 str.Set(checkStr);
             }

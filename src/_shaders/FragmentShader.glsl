@@ -1,5 +1,5 @@
 #version 330 core
-# define NR_POINT_LIGHTS 1
+# define NR_POINT_LIGHTS 5
 # define NR_DIR_LIGHTS 1
 # define NR_SPOT_LIGHTS 1
 
@@ -69,8 +69,8 @@ void main()
     for (int k = 0; k < NR_DIR_LIGHTS; k++) {
         lightOutput += spotLightCalc(spotLights[k]);
     }
-//    FragColor = vec4(vTexCoord.xyy, 1.0f);
-//    lightOutput = vec3(1.0f); //debug
+//    FragColor = vec4(vTexCoord.xyx, 1.0f); // debug textures
+//    FragColor = vec4(fragPos.zzz, 1.0f);
     FragColor = vec4(lightOutput, 1.0f) * texture(texture_diffuse, vTexCoord) * texture(texture_specular, vTexCoord);
 }
 
