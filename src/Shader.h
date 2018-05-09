@@ -13,9 +13,7 @@
 class Shader {
 public:
     // constructors
-    Shader():programID(0) {
-        std::cout << "Default Shader" << std::endl;
-    }
+    Shader():programID(0) {}
 
     Shader(const char* vertexPath, const char* fragmentPath) {
         std::string vertexCode;

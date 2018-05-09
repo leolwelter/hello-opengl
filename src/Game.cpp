@@ -44,14 +44,14 @@ Game::Game(bool debug)
     char *eyeModel = "/home/leo/work/textgame/assets/eyeball_model/eyeball.obj";
     char *boxModel = "/home/leo/work/textgame/assets/box_model/box.obj";
 
-    Creature c1(glm::vec3(0.0f), glm::vec3(0.1f), nanosuitModel);
+    Creature c1(glm::vec3(0.0f), glm::vec3(1.0f), nanosuitModel);
     creatures.push_back(c1);
 
 
     // light sources
-//    LightSource sun(glm::vec3(2.0f, 10.0f, 2.0f), glm::vec3(0.05f), boxModel, LIGHTSOURCE_HIGH_INTENSITY, glm::vec3(.9f, .8f, .7f), 'N');
-//    sun.lDirection = glm::vec3(-2.0f, -1.0f, -2.0f);
-//    directionalLights.push_back(sun);
+    LightSource sun(glm::vec3(2.0f, 10.0f, 2.0f), glm::vec3(0.05f), boxModel, LIGHTSOURCE_LOW_INTENSITY, glm::vec3(.9f, .8f, .7f), 'N');
+    sun.lDirection = glm::vec3(-2.0f, -1.0f, -2.0f);
+    directionalLights.push_back(sun);
 
     srand((unsigned int)glfwGetTime());
     int bound = 10;
@@ -94,6 +94,9 @@ Game::Game(bool debug)
     firstMouseInput = true;
     flashlightCooldown = 0.0f;
     playerBulletCooldown = 0.0f;
+
+    leapController.enableGesture(Leap::Gesture::TYPE_CIRCLE);
+    leapController.enableGesture(Leap::Gesture::TYPE_SCREEN_TAP);
 
 //    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
@@ -155,17 +158,12 @@ void Game::renderObject(GameObject object, glm::mat4 view, glm::mat4 projection)
     object.shader.use();
 
     // model transformation
-    float faceX = cos(glm::degrees(object.pitch)) * cos(glm::degrees(object.yaw));
-    float faceY = sin(glm::degrees(object.pitch));
-    float faceZ = cos(glm::degrees(object.pitch)) * sin(glm::degrees(object.yaw));
-    object.modelFront = glm::normalize(glm::vec3(faceX, faceY, faceZ));
-    object.modelRight = glm::normalize(glm::cross(object.modelFront, object.modelUp));
-
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, object.position);
+    model = glm::rotate(model, -glm::radians(object.yaw), object.modelUp);
+    model = glm::rotate(model, glm::radians(object.pitch), object.modelRight);
     model = glm::scale(model, object.scale);
-    model = glm::rotate(model, glm::degrees(object.yaw), object.modelUp);
-    model = glm::rotate(model, glm::degrees(object.pitch), object.modelRight);
+
     object.shader.setMat4("model", model);
     object.shader.setMat4("view", view);
     object.shader.setMat4("projection", projection);
@@ -220,10 +218,48 @@ int Game::processInput(GLFWwindow* window) {
         glfwSetWindowShouldClose(window, GL_TRUE);
     }
 
-    // get Leap Motion frame data
+    /* LEAP MOTION PROCESSING */
     if (leapController.isConnected()) {
         Leap::Frame cFrame = leapController.frame();
 
+        // Process gesture data
+        Leap::GestureList gestures = cFrame.gestures();
+        for (Leap::GestureList::const_iterator gl = gestures.begin(); gl != gestures.end(); ++gl) {
+            Leap::Gesture gesture = *gl;
+
+            if (gesture.type() == Leap::Gesture::TYPE_CIRCLE) {
+                Leap::CircleGesture circle = gesture;
+                std::string clockwiseness;
+
+                if (circle.pointable().direction().angleTo(circle.normal()) <= M_PI/2) {
+                    clockwiseness = "clockwise";
+                } else {
+                    clockwiseness = "counterclockwise";
+                }
+
+
+                if (circle.state() == Leap::Gesture::STATE_STOP && circle.progress() >= 1.0f) {
+                    std::cout << std::string(2, ' ')
+                              << "Circle id: " << gesture.id()
+                              << ", progress: " << circle.progress()
+                              << ", radius: " << circle.radius()
+                              <<  ", " << clockwiseness << std::endl;
+                    if (clockwiseness == "clockwise") {
+                        for (auto &obj: creatures) {
+                            obj.rotateFace(90.0f);
+                        }
+                    }
+                    if (clockwiseness == "counterclockwise") {
+                        for (auto &obj: creatures) {
+                            obj.rotateFace(-90.0f);
+                        }
+                    }
+                }
+            }
+        }
+
+
+        // Process Hand data
         Leap::HandList hands = cFrame.hands();
         for (Leap::HandList::const_iterator hl = hands.begin(); hl != hands.end(); ++hl) {
             Leap::Hand hand = *hl;
@@ -232,33 +268,68 @@ int Game::processInput(GLFWwindow* window) {
             const Leap::Vector direction = hand.direction();
 
             // Calculate the hand's pitch, roll, and yaw angles
-            if (normal.roll() * RAD_TO_DEG < -45) {
+            float tiltFactor = 2.0f;
+            if (normal.roll() * RAD_TO_DEG > 30) {
                 for (auto &obj: creatures) {
-                    obj.yaw -= deltaT * 0.05f;
-                    obj.printFacing();
+                    obj.rotateFace(-deltaT * obj.getTurnSpeed());
+//                    obj.printFacing();
                 }
-            } else if (normal.roll() * RAD_TO_DEG > 45) {
+            } else if (normal.roll() * RAD_TO_DEG < -20) {
                 for (auto &obj: creatures) {
-                    obj.yaw += deltaT * 0.05f;
-                    obj.printFacing();
+                    obj.rotateFace(deltaT * obj.getTurnSpeed());
+//                    obj.printFacing();
                 }
             }
 
-            if (direction.pitch() * RAD_TO_DEG < 0) {
-                for (auto &obj: creatures) {
-                    obj.position -= deltaT * obj.getSpeed() * obj.modelFront;
-                    obj.printPos();
-                }
-            } else if (direction.pitch() * RAD_TO_DEG > 45) {
+            if (direction.pitch() * RAD_TO_DEG < 15) {
                 for (auto &obj: creatures) {
                     obj.position += deltaT * obj.getSpeed() * obj.modelFront;
-                    obj.printPos();
+//                    obj.printPos();
+                }
+            } else if (direction.pitch() * RAD_TO_DEG > 60) {
+                for (auto &obj: creatures) {
+                    obj.position -= deltaT * obj.getSpeed() * obj.modelFront;
+//                    obj.printPos();
                 }
             }
         }
     }
 
-    // position
+    /* KEYBOARD INPUT PROCESSING */
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+        for (auto &obj: creatures) {
+            obj.position += deltaT * obj.getSpeed() * obj.modelFront;
+            obj.printPos();
+        }
+    }
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+        for (auto &obj: creatures) {
+            obj.position -= deltaT * obj.getSpeed() * obj.modelFront;
+            obj.printPos();
+        }
+    }
+    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+        for (auto &obj: creatures) {
+            obj.rotateFace(-deltaT * obj.getTurnSpeed());
+            obj.printFacing();
+        }
+    }
+    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+        for (auto &obj: creatures) {
+            obj.rotateFace(deltaT * obj.getTurnSpeed());
+            obj.printFacing();
+        }
+    }
+
+    /* CAMERA REPOSITIONING */
+    if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
+        camera.cameraPos += deltaT * CAMERA_SPEED * camera.cameraUp;
+        spotLights[0].position = camera.cameraPos;
+    }
+    if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS) {
+        camera.cameraPos -= deltaT * CAMERA_SPEED * camera.cameraUp;
+        spotLights[0].position = camera.cameraPos;
+    }
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
         camera.cameraPos += deltaT * CAMERA_SPEED * camera.cameraFront;
         spotLights[0].position = camera.cameraPos;
@@ -286,27 +357,6 @@ int Game::processInput(GLFWwindow* window) {
             }
         }
     }
-    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-        for (auto &obj: creatures) {
-            obj.pitch -= deltaT * 0.01f;
-        }
-    }
-    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-        for (auto &obj: creatures) {
-            obj.pitch += deltaT * 0.01f;
-        }
-    }
-    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-        for (auto &obj: creatures) {
-            obj.yaw -= deltaT * 0.01f;
-        }
-    }
-    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-        for (auto &obj: creatures) {
-            obj.yaw += deltaT * 0.01f;
-        }
-    }
-
 
     return -1;
 }
@@ -314,6 +364,28 @@ int Game::processInput(GLFWwindow* window) {
 
 void Game::framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
+}
+
+void Game::moveCameraView(double dX, double dY) {
+    // add offset value to camera yaw/pitch
+    camera.pitch += dY;
+    camera.yaw += dX;
+
+    if (camera.pitch > 89.0f)
+        camera.pitch = 89.0f;
+    else if (camera.pitch < -89.0f)
+        camera.pitch = -89.0f;
+
+    // recalculate camera front vector
+    float faceX = cos(glm::radians(camera.pitch)) * cos(glm::radians(camera.yaw));
+    float faceY = sin(glm::radians(camera.pitch));
+    float faceZ = cos(glm::radians(camera.pitch)) * sin(glm::radians(camera.yaw));
+    camera.cameraFront = glm::normalize(glm::vec3(faceX, faceY, faceZ));
+    camera.cameraRight = glm::normalize(glm::cross(camera.cameraFront, camera.cameraUp));
+    camera.cameraTarget = glm::normalize(-camera.cameraFront);
+
+    // set flashlight direction to camera's target
+    spotLights.at(0).lDirection = camera.cameraFront; //camera.cameraTarget;
 }
 
 void Game::mouse_callback(GLFWwindow* window, double x, double y) {

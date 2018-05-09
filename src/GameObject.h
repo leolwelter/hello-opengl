@@ -38,7 +38,6 @@ public:
         material.ambient = glm::vec3(0.5f);
         material.diffuse = glm::vec3(0.9f);
         material.specular = glm::vec3(1.0f);
-        modelUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
         float faceX = cos(glm::radians(pitch)) * cos(glm::radians(yaw));
         float faceY = sin(glm::radians(pitch));
@@ -49,6 +48,22 @@ public:
 
     };
 
+    glm::mat4 getFacing() {
+            return glm::lookAt(
+                    position,
+                    position + modelFront,
+                    modelUp
+            );
+    }
+
+    void rotateFace(double dYaw) {
+        yaw += dYaw;
+        float faceX = cos(glm::radians(pitch)) * cos(glm::radians(yaw));
+        float faceY = sin(glm::radians(pitch));
+        float faceZ = cos(glm::radians(pitch)) * sin(glm::radians(yaw));
+        modelFront = glm::normalize(glm::vec3(faceX, faceY, faceZ));
+        modelRight = glm::normalize(glm::cross(modelFront, modelUp));
+    }
 
     glm::vec3 position;
     glm::vec3 scale;
