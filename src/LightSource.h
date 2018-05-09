@@ -28,7 +28,7 @@ class LightSource: public GameObject{
 public:
     // constructors
     LightSource(glm::vec3 position, glm::vec3 scale, char* modelPath, glm::vec3 intensities, glm::vec3 vColor, char axis)
-            :GameObject(position, scale, modelPath) ,rotAxis(axis), speed(speed)
+            :GameObject(position, scale, modelPath) ,rotAxis(axis)
     {
         lIntensity = {intensities.x * vColor, intensities.y * vColor, intensities.z * vColor};
         lDirection = glm::vec3(0.0f, -1.0f, 0.0f);
@@ -38,9 +38,14 @@ public:
         cutoffAngle = 30.0f;
         cutoffOuter = 33.0f;
         color = vColor;
+        speed = 25.0f;
     }
 
     // methods
+    void setIntensity(glm::vec3 intensities) {
+        lIntensity = {intensities.x * color, intensities.y * color, intensities.z * color};
+    }
+
     void orbit(float deltaT) {
         if (rotAxis == 'X')
             orbitX(deltaT);

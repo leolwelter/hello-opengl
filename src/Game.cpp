@@ -14,7 +14,7 @@ Game::Game(bool debug)
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Dylan's Game", nullptr, nullptr);
-//    glfwSetWindowPos(window, MAX_SCR_WIDTH / 4, MAX_SCR_HEIGHT);
+    glfwSetWindowPos(window, 50, 0);
     glfwMakeContextCurrent(window);
 
     // init window
@@ -43,21 +43,8 @@ Game::Game(bool debug)
     char *eyeModel = "/home/leo/work/textgame/assets/eyeball_model/eyeball.obj";
     char *boxModel = "/home/leo/work/textgame/assets/box_model/box.obj";
 
-    float creatureYaw = 0.0f;
-    int numCreatures = 6;
-    float circRadius = 3.0f;
-    float tmpX = circRadius;
-    float tmpZ = circRadius;
-    float dTheta = 360.0f / numCreatures;
-    for (int i = 0; i < numCreatures; i++) {
-        Creature cr(glm::vec3(tmpX, 0.0f, tmpZ), glm::vec3(.2f), nanosuitModel);
-        creatureYaw += dTheta;
-        cr.yaw = creatureYaw;
-        cr.pitch = -90.0f;
-        tmpX = cr.position.x * cos((M_PI * dTheta) / 180) - cr.position.z * sin((M_PI * dTheta) / 180);
-        tmpZ = cr.position.z * cos((M_PI * dTheta) / 180) + cr.position.x * sin((M_PI * dTheta) / 180);
-        creatures.push_back(cr);
-    }
+    Creature c1(glm::vec3(0.0f), glm::vec3(0.1f), nanosuitModel);
+    creatures.push_back(c1);
 
 
     // light sources
@@ -69,7 +56,7 @@ Game::Game(bool debug)
     int bound = 10;
     char orbits [] = {'X', 'Y', 'Z'};
 
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 6; i++) {
         glm::vec3 randPos(rand() % bound, rand() % (bound / 2), rand() % bound);
         glm::vec3 randColor((rand() % 100) / 100.0f, (rand() % 100) / 100.0f, (rand() % 100) / 100.0f);
         LightSource light(randPos, glm::vec3(0.1f), boxModel, LIGHTSOURCE_HIGH_INTENSITY, randColor, orbits[rand() % 3]);
@@ -91,8 +78,6 @@ Game::Game(bool debug)
         obj.shader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/FragmentShader.glsl");
     }
     for (auto &obj: pointLights) {
-        if (obj.rotAxis != 'N')
-            obj.orbit(deltaT);
         obj.shader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/FragmentShader.glsl");
     }
     for (auto &obj: directionalLights) {
@@ -109,7 +94,7 @@ Game::Game(bool debug)
     flashlightCooldown = 0.0f;
     playerBulletCooldown = 0.0f;
 
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+//    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
 
 void Game::run() {
@@ -169,9 +154,9 @@ void Game::renderObject(GameObject object, glm::mat4 view, glm::mat4 projection)
     object.shader.use();
 
     // model transformation
-    float faceX = cos(glm::radians(object.pitch)) * cos(glm::radians(object.yaw));
-    float faceY = sin(glm::radians(object.pitch));
-    float faceZ = cos(glm::radians(object.pitch)) * sin(glm::radians(object.yaw));
+    float faceX = cos(glm::degrees(object.pitch)) * cos(glm::degrees(object.yaw));
+    float faceY = sin(glm::degrees(object.pitch));
+    float faceZ = cos(glm::degrees(object.pitch)) * sin(glm::degrees(object.yaw));
     object.modelFront = glm::normalize(glm::vec3(faceX, faceY, faceZ));
     object.modelRight = glm::normalize(glm::cross(object.modelFront, object.modelUp));
 
@@ -234,6 +219,44 @@ int Game::processInput(GLFWwindow* window) {
         glfwSetWindowShouldClose(window, GL_TRUE);
     }
 
+    // get Leap Motion frame data
+    if (leapController.isConnected()) {
+        Leap::Frame cFrame = leapController.frame();
+
+        Leap::HandList hands = cFrame.hands();
+        for (Leap::HandList::const_iterator hl = hands.begin(); hl != hands.end(); ++hl) {
+            Leap::Hand hand = *hl;
+            // Get the hand's normal vector and direction
+            const Leap::Vector normal = hand.palmNormal();
+            const Leap::Vector direction = hand.direction();
+
+            // Calculate the hand's pitch, roll, and yaw angles
+            if (normal.roll() * RAD_TO_DEG < -45) {
+                for (auto &obj: creatures) {
+                    obj.yaw -= deltaT * 0.05f;
+                    obj.printFacing();
+                }
+            } else if (normal.roll() * RAD_TO_DEG > 45) {
+                for (auto &obj: creatures) {
+                    obj.yaw += deltaT * 0.05f;
+                    obj.printFacing();
+                }
+            }
+
+            if (direction.pitch() * RAD_TO_DEG < 0) {
+                for (auto &obj: creatures) {
+                    obj.position -= deltaT * obj.getSpeed() * obj.modelFront;
+                    obj.printPos();
+                }
+            } else if (direction.pitch() * RAD_TO_DEG > 45) {
+                for (auto &obj: creatures) {
+                    obj.position += deltaT * obj.getSpeed() * obj.modelFront;
+                    obj.printPos();
+                }
+            }
+        }
+    }
+
     // position
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
         camera.cameraPos += deltaT * CAMERA_SPEED * camera.cameraFront;
@@ -255,12 +278,10 @@ int Game::processInput(GLFWwindow* window) {
         if (flashlightCooldown <= 0) {
             flashlightCooldown = FLASHLIGHT_COOLDOWN;
             if (spotLights.at(0).lIntensity.diffuse == glm::vec3(0.0f)) {
-                spotLights.at(0).lIntensity = {spotLights.at(0).color, spotLights.at(0).color, spotLights.at(0).color};
+                spotLights.at(0).setIntensity(LIGHTSOURCE_STD_INTENSITY);
             }
             else {
-                spotLights.at(0).lIntensity.diffuse = glm::vec3(0.0f);
-                spotLights.at(0).lIntensity.ambient= glm::vec3(0.0f);
-                spotLights.at(0).lIntensity.specular = glm::vec3(0.0f);
+                spotLights.at(0).setIntensity(glm::vec3(0.0f));
             }
         }
     }
@@ -284,6 +305,7 @@ int Game::processInput(GLFWwindow* window) {
             obj.yaw += deltaT * 0.01f;
         }
     }
+
 
     return -1;
 }

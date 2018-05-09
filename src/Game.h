@@ -14,6 +14,7 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
+#include <leap/Leap.h>
 
 #include <iostream>
 #include <vector>
@@ -26,11 +27,12 @@
 #include "Obstacle.h"
 #include "Camera.h"
 #include "LightSource.h"
+#include "ControlInterface.h"
 
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
 const unsigned int MAX_SCR_WIDTH = 1366;
 const unsigned int MAX_SCR_HEIGHT = 768;
+const unsigned int SCR_WIDTH = 1200;
+const unsigned int SCR_HEIGHT = 720;
 const double FLASHLIGHT_COOLDOWN = 0.4;
 const double BULLET_COOLDOWN = 0.4;
 
@@ -66,6 +68,8 @@ private:
 
     // attributes
     Camera camera;
+    ControlLeap controlListener;
+    Leap::Controller leapController;
 
     std::vector<Creature> creatures;
     std::vector<Obstacle> obstacles;

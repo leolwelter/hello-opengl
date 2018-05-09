@@ -25,7 +25,12 @@ public:
     int getAttack() { return attack; };
     int getDefense() { return defense; };
     float getSpeed() { return speed; };
-
+    void printPos() {
+        std::cout << "[" << position.x << ", " << position.y << ", " << position.z << "]" << std::endl;
+    }
+    void printFacing() {
+        std::cout << "Facing <" << modelFront.x << ", " << modelFront.y << ", " << modelFront.z << ">" << std::endl;
+    }
 private:
     float hp;
     float attack;

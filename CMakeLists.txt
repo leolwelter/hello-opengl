@@ -12,7 +12,7 @@ endif (NOT OPENGL_FOUND)
 
 # Source files
 set(SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
-set(SOURCES ${SRC_DIR}/main.cpp ${SRC_DIR}/glad.c src/Creature.h src/Game.cpp src/Game.h src/GameObject.h src/Shader.h src/stb_image.cpp src/Obstacle.h src/Camera.h src/LightSource.h src/Mesh.h src/Model.h)
+set(SOURCES ${SRC_DIR}/main.cpp ${SRC_DIR}/glad.c src/Creature.h src/Game.cpp src/Game.h src/GameObject.h src/Shader.h src/stb_image.cpp src/Obstacle.h src/Camera.h src/LightSource.h src/Mesh.h src/Model.h src/ControlInterface.h)
 
 if (WIN32)
     include_directories(
@@ -44,6 +44,7 @@ include_directories(
 link_directories(
         /home/leo/work/lib/
         /home/leo/work/lib/assimp/code/
+        /home/leo/work/lib/leap/
         /usr/lib/
         /usr/local/lib
 )
@@ -95,4 +96,4 @@ endif(UNIX)
 add_executable(open_gl_game ${SOURCES})
 
 # link the libraries above to the compiled target
-target_link_libraries(open_gl_game ${GL_LIBS} assimp)
+target_link_libraries(open_gl_game ${GL_LIBS} assimp Leap)

@@ -10,7 +10,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-const float YAW         = -90.0f;
+const float YAW         =  -90.0f;
 const float PITCH       =  0.0f;
 const float CAMERA_SPEED       =  2.5f;
 const float SENSITIVITY =  0.1f;
@@ -20,6 +20,7 @@ const glm::vec3 WORLD_UP = glm::vec3(0.0f, 1.0f, 0.0f);
 class Camera {
 public:
     Camera(): pitch(PITCH), yaw(YAW), sensitivity(SENSITIVITY){
+        std::cout << "Default Camera instantiated" << std::endl;
         // Gram-Schmidt process to get camera coordinate space
         cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
         cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
