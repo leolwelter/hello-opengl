@@ -12,7 +12,7 @@ endif (NOT OPENGL_FOUND)
 
 # Source files
 set(SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
-set(SOURCES ${SRC_DIR}/main.cpp ${SRC_DIR}/glad.c src/Creature.h src/Game.cpp src/Game.h src/GameObject.h src/Shader.h src/stb_image.cpp src/Obstacle.h src/Camera.h src/LightSource.h src/Mesh.h src/Model.h src/ControlInterface.h)
+set(SOURCES ${SRC_DIR}/main.cpp ${SRC_DIR}/glad.c src/Creature.h src/Game.cpp src/Game.h src/GameObject.h src/Shader.h src/stb_image.cpp src/Obstacle.h src/Camera.h src/LightSource.h src/Mesh.h src/Model.h)
 
 if (WIN32)
     include_directories(

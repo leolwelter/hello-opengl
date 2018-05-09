@@ -27,7 +27,6 @@
 #include "Obstacle.h"
 #include "Camera.h"
 #include "LightSource.h"
-#include "ControlInterface.h"
 
 const unsigned int MAX_SCR_WIDTH = 1366;
 const unsigned int MAX_SCR_HEIGHT = 768;
@@ -68,7 +67,6 @@ private:
 
     // attributes
     Camera camera;
-    ControlLeap controlListener;
     Leap::Controller leapController;
 
     std::vector<Creature> creatures;

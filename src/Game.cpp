@@ -4,10 +4,11 @@
 
 #include "Game.h"
 
+static const float RAD_TO_DEG  = 57.295779513f;
+
 Game::Game(bool debug)
 {
     std::cout << "Initializing..." << std::endl;
-
     glfwInit(); // create window
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
