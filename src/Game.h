@@ -35,6 +35,36 @@ const unsigned int SCR_HEIGHT = 720;
 const double FLASHLIGHT_COOLDOWN = 0.4;
 const double BULLET_COOLDOWN = 0.4;
 
+static char *nanosuitModel = "/home/leo/work/textgame/assets/nanosuit_model/nanosuit.obj";
+static char *dragonModel = "/home/leo/work/textgame/assets/black_dragon_model/Dragon 2.5_fbx.fbx";
+static char *farmHouseModel = "/home/leo/work/textgame/assets/farmhouse_model/farmhouse_obj.obj";
+static char *eyeModel = "/home/leo/work/textgame/assets/eyeball_model/eyeball.obj";
+static char *boxModel = "/home/leo/work/textgame/assets/box_model/box.obj";
+
+//struct Hand {
+//    Hand() {
+//        palm   = Creature(glm::vec3( 0.0f,  0.0f,  0.0f), glm::vec3(1.0f, 1.0f, 0.1f), boxModel);
+//        thumb  = Creature(glm::vec3(-1.0f, -1.0f,  0.0f), glm::vec3(1.0f, 0.1f, 0.1f), boxModel);
+//        index  = Creature(glm::vec3(-1.0f,  0.5f,  0.0f), glm::vec3(0.1f, 1.0f, 0.1f), boxModel);
+//        middle = Creature(glm::vec3( 0.5f,  0.5f,  0.0f), glm::vec3(0.1f, 1.0f, 0.1f), boxModel);
+//        ring   = Creature(glm::vec3( 1.0f,  0.5f,  0.0f), glm::vec3(0.1f, 1.0f, 0.1f), boxModel);
+//        pinky  = Creature(glm::vec3( 1.5f,  0.5f,  0.0f), glm::vec3(0.1f, 1.0f, 0.1f), boxModel);
+//        handParts.push_back(palm   );
+//        handParts.push_back(thumb  );
+//        handParts.push_back(index  );
+//        handParts.push_back(middle );
+//        handParts.push_back(ring   );
+//        handParts.push_back(pinky  );
+//    }
+//    Creature palm;
+//    Creature thumb;
+//    Creature index;
+//    Creature middle;
+//    Creature ring;
+//    Creature pinky;
+//    std::vector<Creature> handParts;
+//};
+
 class Game {
 public:
     // constructors
@@ -63,7 +93,7 @@ public:
 
 private:
     // constructors
-    Game(void){}; // there can only be one
+    Game(){}; // there can only be one
 
     // attributes
     Camera camera;

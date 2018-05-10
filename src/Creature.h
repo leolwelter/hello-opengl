@@ -16,6 +16,8 @@ public:
             :hp(1.0f), attack(1.0f), defense(1.0f), speed(3.0f), turnSpeed(45.0f), GameObject(position, scale, modelPath)
     {}
 
+    Creature() {}
+
     void setHP(int hp_t) { hp = hp_t; };
     void setAttack(int attack_t) { attack = attack_t; };
     void setDefense(int defense_t) { defense = defense_t; };

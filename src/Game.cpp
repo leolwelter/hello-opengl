@@ -6,6 +6,7 @@
 
 static const float RAD_TO_DEG  = 57.295779513f;
 
+
 Game::Game(bool debug)
 {
     std::cout << "Initializing..." << std::endl;
@@ -38,14 +39,6 @@ Game::Game(bool debug)
 
     /* ---- game objects ----*/
     // creatures
-    char *nanosuitModel = "/home/leo/work/textgame/assets/nanosuit_model/nanosuit.obj";
-    char *dragonModel = "/home/leo/work/textgame/assets/black_dragon_model/Dragon 2.5_fbx.fbx";
-    char *farmHouseModel = "/home/leo/work/textgame/assets/farmhouse_model/farmhouse_obj.obj";
-    char *eyeModel = "/home/leo/work/textgame/assets/eyeball_model/eyeball.obj";
-    char *boxModel = "/home/leo/work/textgame/assets/box_model/box.obj";
-
-    Creature c1(glm::vec3(0.0f), glm::vec3(1.0f), nanosuitModel);
-    creatures.push_back(c1);
 
 
     // light sources
@@ -57,7 +50,7 @@ Game::Game(bool debug)
     int bound = 10;
     char orbits [] = {'X', 'Y', 'Z'};
 
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < 10; i++) {
         glm::vec3 randPos(rand() % bound, rand() % (bound / 2), rand() % bound);
         glm::vec3 randColor((rand() % 100) / 100.0f, (rand() % 100) / 100.0f, (rand() % 100) / 100.0f);
         LightSource light(randPos, glm::vec3(0.1f), boxModel, LIGHTSOURCE_HIGH_INTENSITY, randColor, orbits[rand() % 3]);
@@ -69,24 +62,7 @@ Game::Game(bool debug)
     flashLight.lDirection = camera.cameraTarget;
     spotLights.push_back(flashLight);
 
-    // obstacles
 
-    // compile and assign shaders for every GameObject
-    for (auto &obj: creatures) {
-        obj.shader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/FragmentShader.glsl");
-    }
-    for (auto &obj: obstacles) {
-        obj.shader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/FragmentShader.glsl");
-    }
-    for (auto &obj: pointLights) {
-        obj.shader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/FragmentShader.glsl");
-    }
-    for (auto &obj: directionalLights) {
-        obj.shader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/FragmentShader.glsl");
-    }
-    for (auto &obj: spotLights) {
-        obj.shader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/FragmentShader.glsl");
-    }
 
     /* ---- game logic initialization ---- */
     lastMouseX = SCR_WIDTH / 2;
@@ -96,7 +72,8 @@ Game::Game(bool debug)
     playerBulletCooldown = 0.0f;
 
     leapController.enableGesture(Leap::Gesture::TYPE_CIRCLE);
-    leapController.enableGesture(Leap::Gesture::TYPE_SCREEN_TAP);
+    leapController.enableGesture(Leap::Gesture::TYPE_SWIPE);
+    leapController.enableGesture(Leap::Gesture::TYPE_KEY_TAP);
 
 //    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
@@ -239,60 +216,97 @@ int Game::processInput(GLFWwindow* window) {
 
 
                 if (circle.state() == Leap::Gesture::STATE_STOP && circle.progress() >= 1.0f) {
-                    std::cout << std::string(2, ' ')
-                              << "Circle id: " << gesture.id()
-                              << ", progress: " << circle.progress()
-                              << ", radius: " << circle.radius()
-                              <<  ", " << clockwiseness << std::endl;
                     if (clockwiseness == "clockwise") {
-                        for (auto &obj: creatures) {
-                            obj.rotateFace(90.0f);
+                        for (auto &obj: pointLights) {
+                            if (obj.rotAxis == 'X')
+                                obj.rotAxis = 'Y';
+                            if (obj.rotAxis == 'Y')
+                                obj.rotAxis = 'Z';
+                            if (obj.rotAxis == 'Z')
+                                obj.rotAxis = 'X';
                         }
                     }
-                    if (clockwiseness == "counterclockwise") {
-                        for (auto &obj: creatures) {
-                            obj.rotateFace(-90.0f);
+                    else if (clockwiseness == "counterclockwise") {
+                        for (auto &obj: pointLights) {
+                            if (obj.rotAxis == 'Z')
+                                obj.rotAxis = 'Y';
+                            if (obj.rotAxis == 'Y')
+                                obj.rotAxis = 'X';
+                            if (obj.rotAxis == 'X')
+                                obj.rotAxis = 'Z';
                         }
                     }
+                }
+            }
+            else if (gesture.type() == Leap::Gesture::TYPE_SWIPE) {
+                Leap::SwipeGesture swipe = gesture;
+                if (swipe.state() == Leap::Gesture::STATE_STOP) {
+                    std::cout << "swiped: ";
+                    float vX = swipe.direction().x;
+                    float speed = swipe.speed();
+                    if (vX > 0) {
+                        std::cout << "right" << std::endl;
+                        for (auto &obj: pointLights) {
+                            obj.speed = 25.0f;
+                            obj.rotAxis = 'Y';
+                        }
+                    }
+                    else if (vX < 0) {
+                        std::cout << "left" << std::endl;
+                        for (auto &obj: pointLights) {
+                            obj.speed = -25.0f;
+                            obj.rotAxis = 'Y';
+                        }
+                    }
+
+                }
+
+            }
+            else if (gesture.type() == Leap::Gesture::TYPE_KEY_TAP) {
+                Leap::KeyTapGesture tap = gesture;
+                if (tap.isValid() && tap.state() == Leap::Gesture::STATE_STOP) {
+                    std::cout << "-------KeyTap-------" << std::endl
+                            << "Id: " << tap.id()
+                            << "\tFinger: " << tap.pointable().id()
+                            << "\tDirection: " << tap.direction()
+                            << "\tProgress: " << tap.progress()
+                            << std::endl;
+
                 }
             }
         }
 
 
         // Process Hand data
-        Leap::HandList hands = cFrame.hands();
-        for (Leap::HandList::const_iterator hl = hands.begin(); hl != hands.end(); ++hl) {
-            Leap::Hand hand = *hl;
-            // Get the hand's normal vector and direction
-            const Leap::Vector normal = hand.palmNormal();
-            const Leap::Vector direction = hand.direction();
-
-            // Calculate the hand's pitch, roll, and yaw angles
-            float tiltFactor = 2.0f;
-            if (normal.roll() * RAD_TO_DEG > 30) {
-                for (auto &obj: creatures) {
-                    obj.rotateFace(-deltaT * obj.getTurnSpeed());
-//                    obj.printFacing();
-                }
-            } else if (normal.roll() * RAD_TO_DEG < -20) {
-                for (auto &obj: creatures) {
-                    obj.rotateFace(deltaT * obj.getTurnSpeed());
-//                    obj.printFacing();
-                }
-            }
-
-            if (direction.pitch() * RAD_TO_DEG < 15) {
-                for (auto &obj: creatures) {
-                    obj.position += deltaT * obj.getSpeed() * obj.modelFront;
-//                    obj.printPos();
-                }
-            } else if (direction.pitch() * RAD_TO_DEG > 60) {
-                for (auto &obj: creatures) {
-                    obj.position -= deltaT * obj.getSpeed() * obj.modelFront;
-//                    obj.printPos();
-                }
-            }
-        }
+//        Leap::HandList hands = cFrame.hands();
+//        for (Leap::HandList::const_iterator hl = hands.begin(); hl != hands.end(); ++hl) {
+//            Leap::Hand hand = *hl;
+//            // Get the hand's normal vector and direction
+//            const Leap::Vector normal = hand.palmNormal();
+//            const Leap::Vector direction = hand.direction();
+//
+//            // Calculate the hand's pitch, roll, and yaw angles
+//            float tiltFactor = 2.0f;
+//            if (normal.roll() * RAD_TO_DEG > 30) {
+//                for (auto &obj: creatures) {
+//                    obj.rotateFace(-deltaT * obj.getTurnSpeed());
+//                }
+//            } else if (normal.roll() * RAD_TO_DEG < -20) {
+//                for (auto &obj: creatures) {
+//                    obj.rotateFace(deltaT * obj.getTurnSpeed());
+//                }
+//            }
+//
+//            if (direction.pitch() * RAD_TO_DEG < 15) {
+//                for (auto &obj: creatures) {
+//                    obj.position += deltaT * obj.getSpeed() * obj.modelFront;
+//                }
+//            } else if (direction.pitch() * RAD_TO_DEG > 60) {
+//                for (auto &obj: creatures) {
+//                    obj.position -= deltaT * obj.getSpeed() * obj.modelFront;
+//                }
+//            }
+//        }
     }
 
     /* KEYBOARD INPUT PROCESSING */

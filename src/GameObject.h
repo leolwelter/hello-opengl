@@ -39,6 +39,8 @@ public:
         material.diffuse = glm::vec3(0.9f);
         material.specular = glm::vec3(1.0f);
 
+        shader = Shader("../src/_shaders/VertexShader.glsl", "../src/_shaders/FragmentShader.glsl");
+
         float faceX = cos(glm::radians(pitch)) * cos(glm::radians(yaw));
         float faceY = sin(glm::radians(pitch));
         float faceZ = cos(glm::radians(pitch)) * sin(glm::radians(yaw));
@@ -46,7 +48,9 @@ public:
         modelUp = WORLD_UP;
         modelRight = glm::normalize(glm::cross(modelFront, modelUp));
 
-    };
+    }
+
+    GameObject() {};
 
     glm::mat4 getFacing() {
             return glm::lookAt(

@@ -19,7 +19,7 @@ const glm::vec3 WORLD_UP    = glm::vec3(0.0f, 1.0f, 0.0f);
 
 class Camera {
 public:
-    Camera(): pitch(PITCH), yaw(YAW), sensitivity(SENSITIVITY){
+    Camera(): pitch(PITCH), yaw(YAW), sensitivity(SENSITIVITY) {
         std::cout << "Default Camera instantiated" << std::endl;
         // Gram-Schmidt process to get camera coordinate space
         cameraPos = glm::vec3(-10.0f, 10.0f, 0.0f);
@@ -31,7 +31,8 @@ public:
     }
 
     // Constructor with vectors
-    Camera(glm::vec3 position, glm::vec3 up, float yaw_g = YAW, float pitch_g = PITCH) : cameraFront(glm::vec3(0.0f, 0.0f, -1.0f)), sensitivity(SENSITIVITY)
+    Camera(glm::vec3 position, glm::vec3 up, float yaw_g = YAW, float pitch_g = PITCH)
+            : cameraFront(glm::vec3(0.0f, 0.0f, -1.0f)), sensitivity(SENSITIVITY)
     {
         cameraPos = position;
         cameraUp = up;
