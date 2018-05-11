@@ -38,6 +38,7 @@ public:
         cutoffAngle = 30.0f;
         cutoffOuter = 33.0f;
         color = vColor;
+
         speed = 25.0f;
     }
 

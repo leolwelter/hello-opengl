@@ -39,7 +39,7 @@ Game::Game(bool debug)
 
     /* ---- game objects ----*/
     // creatures
-
+    creatures.push_back(Creature(glm::vec3(0.0f), glm::vec3(1.0f), dragonModel));
 
     // light sources
     LightSource sun(glm::vec3(2.0f, 10.0f, 2.0f), glm::vec3(0.05f), boxModel, LIGHTSOURCE_LOW_INTENSITY, glm::vec3(.9f, .8f, .7f), 'N');
@@ -278,35 +278,55 @@ int Game::processInput(GLFWwindow* window) {
 
 
         // Process Hand data
-//        Leap::HandList hands = cFrame.hands();
-//        for (Leap::HandList::const_iterator hl = hands.begin(); hl != hands.end(); ++hl) {
-//            Leap::Hand hand = *hl;
-//            // Get the hand's normal vector and direction
-//            const Leap::Vector normal = hand.palmNormal();
-//            const Leap::Vector direction = hand.direction();
-//
-//            // Calculate the hand's pitch, roll, and yaw angles
-//            float tiltFactor = 2.0f;
-//            if (normal.roll() * RAD_TO_DEG > 30) {
-//                for (auto &obj: creatures) {
-//                    obj.rotateFace(-deltaT * obj.getTurnSpeed());
-//                }
-//            } else if (normal.roll() * RAD_TO_DEG < -20) {
-//                for (auto &obj: creatures) {
-//                    obj.rotateFace(deltaT * obj.getTurnSpeed());
-//                }
-//            }
-//
-//            if (direction.pitch() * RAD_TO_DEG < 15) {
-//                for (auto &obj: creatures) {
-//                    obj.position += deltaT * obj.getSpeed() * obj.modelFront;
-//                }
-//            } else if (direction.pitch() * RAD_TO_DEG > 60) {
-//                for (auto &obj: creatures) {
-//                    obj.position -= deltaT * obj.getSpeed() * obj.modelFront;
-//                }
-//            }
-//        }
+        Leap::HandList hands = cFrame.hands();
+
+        // Process homebrewed gestures
+        // L shape gesture
+        if (hands.count() == 1) {
+            Leap::Hand hand = *hands.begin();
+            bool rightHanded = hand.isRight();
+            Leap::FingerList fingers = hand.fingers();
+            if (fingers.extended().count() == 2) {
+                float innerAngle = fingers[0].direction().angleTo(fingers[1].direction());
+                if (innerAngle <= M_PI / 4 && innerAngle >= M_PI / 8) {
+                    float direction = rightHanded ? -1.0f : 1.0f;
+                    rightHanded ? (std::cout << "L shape RIGHT" << std::endl) : (std::cout << "L shape LEFT" << std::endl);
+                    for (auto &obj: creatures) {
+                        obj.yaw += deltaT * obj.getTurnSpeed() * direction;
+                    }
+                }
+            }
+        }
+
+        for (Leap::HandList::const_iterator hl = hands.begin(); hl != hands.end(); ++hl) {
+            Leap::Hand hand = *hl;
+
+            // Get the hand's normal vector and direction
+            const Leap::Vector normal = hand.palmNormal();
+            const Leap::Vector direction = hand.direction();
+
+            // Calculate the hand's pitch, roll, and yaw angles
+            float tiltFactor = 2.0f;
+            if (normal.roll() * RAD_TO_DEG > 30) {
+                for (auto &obj: creatures) {
+                    obj.rotateFace(-deltaT * obj.getTurnSpeed());
+                }
+            } else if (normal.roll() * RAD_TO_DEG < -20) {
+                for (auto &obj: creatures) {
+                    obj.rotateFace(deltaT * obj.getTurnSpeed());
+                }
+            }
+
+            if (direction.pitch() * RAD_TO_DEG < 15) {
+                for (auto &obj: creatures) {
+                    obj.position += deltaT * obj.getSpeed() * obj.modelFront;
+                }
+            } else if (direction.pitch() * RAD_TO_DEG > 60) {
+                for (auto &obj: creatures) {
+                    obj.position -= deltaT * obj.getSpeed() * obj.modelFront;
+                }
+            }
+        }
     }
 
     /* KEYBOARD INPUT PROCESSING */
